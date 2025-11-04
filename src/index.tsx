@@ -5,7 +5,7 @@ import { jsxRenderer } from 'hono/jsx-renderer'
 
 // Types pour les bindings Cloudflare
 type Bindings = {
-  DB: D1Database;
+  db: D1Database;
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -113,17 +113,15 @@ app.use('*', jsxRenderer(({ children, title }) => {
 // PAGE D'ACCUEIL
 // ============================================
 app.get('/', async (c) => {
-  const { DB } = c.env;
-  
   // Récupérer les paramètres du site
-  const settings = await DB.prepare('SELECT key, value FROM site_settings').all();
+  const settings = await c.env.db.prepare('SELECT key, value FROM site_settings').all();
   const settingsMap = settings.results.reduce((acc: any, row: any) => {
     acc[row.key] = row.value;
     return acc;
   }, {});
   
   // Récupérer les formules
-  const packages = await DB.prepare('SELECT * FROM travel_packages ORDER BY sort_order ASC').all();
+  const packages = await c.env.db.prepare('SELECT * FROM travel_packages ORDER BY sort_order ASC').all();
 
   return c.render(
     <>
@@ -204,8 +202,7 @@ app.get('/', async (c) => {
 // PAGE QUI SUIS-JE
 // ============================================
 app.get('/qui-suis-je', async (c) => {
-  const { DB } = c.env;
-  const settings = await DB.prepare('SELECT key, value FROM site_settings').all();
+  const settings = await c.env.db.prepare('SELECT key, value FROM site_settings').all();
   const settingsMap = settings.results.reduce((acc: any, row: any) => {
     acc[row.key] = row.value;
     return acc;
@@ -265,8 +262,7 @@ app.get('/qui-suis-je', async (c) => {
 // PAGE MES FORMULES
 // ============================================
 app.get('/mes-formules', async (c) => {
-  const { DB } = c.env;
-  const packages = await DB.prepare('SELECT * FROM travel_packages ORDER BY sort_order ASC').all();
+  const packages = await c.env.db.prepare('SELECT * FROM travel_packages ORDER BY sort_order ASC').all();
 
   return c.render(
     <>
@@ -414,8 +410,7 @@ app.get('/voyage-sur-mesure', (c) => {
 // PAGE FAQ
 // ============================================
 app.get('/faq', async (c) => {
-  const { DB } = c.env;
-  const faqs = await DB.prepare('SELECT * FROM faqs ORDER BY sort_order ASC').all();
+  const faqs = await c.env.db.prepare('SELECT * FROM faqs ORDER BY sort_order ASC').all();
 
   return c.render(
     <>
@@ -458,8 +453,7 @@ app.get('/faq', async (c) => {
 // PAGE BLOG
 // ============================================
 app.get('/blog', async (c) => {
-  const { DB } = c.env;
-  const posts = await DB.prepare('SELECT * FROM blog_posts WHERE published = 1 ORDER BY published_at DESC').all();
+  const posts = await c.env.db.prepare('SELECT * FROM blog_posts WHERE published = 1 ORDER BY published_at DESC').all();
 
   return c.render(
     <>
@@ -615,18 +609,16 @@ app.get('/contact', (c) => {
 
 // API: Récupérer toutes les formules
 app.get('/api/packages', async (c) => {
-  const { DB } = c.env;
-  const packages = await DB.prepare('SELECT * FROM travel_packages ORDER BY sort_order ASC').all();
+  const packages = await c.env.db.prepare('SELECT * FROM travel_packages ORDER BY sort_order ASC').all();
   return c.json(packages.results)
 })
 
 // API: Soumettre une demande de devis
 app.post('/api/quote-request', async (c) => {
-  const { DB } = c.env;
   const data = await c.req.json();
   
   try {
-    await DB.prepare(`
+    await c.env.db.prepare(`
       INSERT INTO quote_requests (name, email, phone, destination, duration, budget, travelers, message)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
@@ -648,8 +640,7 @@ app.post('/api/quote-request', async (c) => {
 
 // API: Récupérer les paramètres du site
 app.get('/api/settings', async (c) => {
-  const { DB } = c.env;
-  const settings = await DB.prepare('SELECT key, value FROM site_settings').all();
+  const settings = await c.env.db.prepare('SELECT key, value FROM site_settings').all();
   const settingsMap = settings.results.reduce((acc: any, row: any) => {
     acc[row.key] = row.value;
     return acc;
