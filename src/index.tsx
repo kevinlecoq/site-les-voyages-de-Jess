@@ -29,7 +29,8 @@ app.use('*', jsxRenderer(({ children, title }) => {
         {/* Fonts Google */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Alice&family=Brittany+Signature&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
         
         {/* Font Awesome */}
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
@@ -125,26 +126,38 @@ app.get('/', async (c) => {
 
   return c.render(
     <>
-      {/* Section Hero */}
-      <section class="hero">
-        <h1 class="hero-title">Les Voyages de Jess</h1>
-        <p class="hero-subtitle">{settingsMap.hero_subtitle || 'Créatrice de voyages sur mesure'}</p>
-        <div style="margin-top: 2rem;">
-          <a href="/voyage-sur-mesure" class="btn btn-primary" style="margin-right: 1rem;">
-            <i class="fas fa-compass"></i> Créer mon voyage
-          </a>
-          <a href="/qui-suis-je" class="btn btn-outline">
-            <i class="fas fa-user"></i> Découvrir Jessica
-          </a>
-        </div>
-      </section>
+    {/* Section Hero */}
+<section class="hero" style="background-image: url('/static/images/hero-background.jpg'); background-size: cover; background-position: center; position: relative;">
+  <div style="background: rgba(0,0,0,0.3); position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1;"></div>
+  <div style="position: relative; z-index: 2;">
+    <h1 class="hero-title" style="color: white; font-size: 4rem;">Les Voyages de Jess</h1>
+    <p class="hero-subtitle" style="font-size: 1.2rem; color: white; font-family: 'Alice', serif;">Créatrice de voyages sur mesure</p>
+    <p style="font-size: 1.3rem; color: white; margin-top: 1rem; font-style: italic; font-family: 'Alice', serif;">
+      "Trouvez votre chemin de traverse, là où commence la magie du voyage"
+    </p>
+    <div style="margin-top: 2rem;">
+      <a href="/contact" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+        <i class="fas fa-compass"></i> Je crée mon voyage
+      </a>
+    </div>
+  </div>
+</section>
 
-      {/* Section Formules */}
-      <section class="section">
-        <h2 class="section-title">Mes Formules de Voyage</h2>
-        <p style="text-align: center; color: var(--color-text-secondary); max-width: 700px; margin: 0 auto 2rem;">
-          Choisissez la formule qui correspond à vos envies. Chaque voyage est unique et adapté à votre rythme.
-        </p>
+{/* Section Formules */}
+<section class="section">
+  <h2 class="section-title">Mes Formules de Voyage</h2>
+  
+  {/* Texte explicatif éditable */}
+  <div style="max-width: 800px; margin: 0 auto 3rem; text-align: center; padding: 2rem; background: var(--color-bg-warm); border-radius: var(--radius-lg);">
+    <p style="font-size: 1.1rem; line-height: 1.8; color: var(--color-text-primary);">
+      {settingsMap.formules_intro || "En tant que Travel Planner, mon rôle est de concevoir votre voyage sur mesure de A à Z. Je m'occupe de créer un itinéraire personnalisé, adapté à vos envies, votre budget et votre rythme. Vous gagnez du temps et profitez de conseils d'experte pour un voyage qui vous ressemble vraiment."}
+    </p>
+  </div>
+  
+  <p style="text-align: center; color: var(--color-text-secondary); max-width: 700px; margin: 0 auto 2rem;">
+    Choisissez la formule qui correspond à vos envies. Chaque voyage est unique et adapté à votre rythme.
+  </p>
+
         <div class="packages-grid">
           {packages.results.map((pkg: any) => (
             <div class="package-card">
