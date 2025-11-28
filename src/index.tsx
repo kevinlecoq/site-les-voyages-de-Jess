@@ -2,10 +2,12 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { serveStatic } from 'hono/cloudflare-workers'
 import { jsxRenderer } from 'hono/jsx-renderer'
+import Anthropic from '@anthropic-ai/sdk'
 
 // Types pour les bindings Cloudflare
 type Bindings = {
   db: D1Database;
+  ANTHROPIC_API_KEY: string;
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -103,12 +105,115 @@ app.use('*', jsxRenderer(({ children, title }) => {
           </div>
         </footer>
 
+        {/* Widget Chatbot */}
+        <div id="chat-widget-button" 
+             class="chat-widget-button">
+          💬
+        </div>
+
+        <div id="chat-widget-window" class="chat-widget-window chat-widget-hidden">
+          <div class="chat-header">
+            <div>
+              <h3 class="chat-title">Assistant de Jess</h3>
+              <p class="chat-status">En ligne</p>
+            </div>
+            <button id="close-chat" class="chat-close">×</button>
+          </div>
+
+          <div id="chat-messages" class="chat-messages">
+            <div class="chat-message chat-message-bot">
+              <p>👋 Bonjour ! Je suis l'assistant de Jess. Comment puis-je vous aider à planifier votre voyage ?</p>
+            </div>
+          </div>
+
+          <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+              <input 
+                type="text" 
+                id="user-input" 
+                placeholder="Votre message..."
+                class="chat-input"
+              />
+              <button id="send-button" class="chat-send-btn">➤</button>
+            </div>
+          </div>
+        </div>
+
         {/* Scripts */}
         <script src="/static/js/app.js"></script>
+        <script src="/static/js/chatbot.js"></script>
       </body>
     </html>
   )
 }))
+
+// ============================================
+// API CHATBOT
+// ============================================
+
+// Route API pour le chatbot
+app.post('/api/chat', async (c) => {
+  try {
+    // Récupère l'historique envoyé par le frontend
+    const { message, history = [] } = await c.req.json()
+    
+    // Initialise le client Anthropic avec la clé API
+    const anthropic = new Anthropic({
+      apiKey: c.env.ANTHROPIC_API_KEY
+    })
+
+    // Construit la liste des messages avec l'historique
+    const messages = [
+      ...history, // Anciennes conversations
+      {
+        role: 'user',
+        content: message // Nouveau message
+      }
+    ]
+
+    // Envoie le message à Claude avec tout l'historique
+    const response = await anthropic.messages.create({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 1024,
+      messages: messages,
+      system: `Tu es un assistant de voyage expert pour 'Les Voyages de Jess'. 
+
+TON RÔLE : Inspirer et conseiller, MAIS pas remplacer Jess.
+
+RÈGLES IMPORTANTES :
+1. Donne des idées générales et inspire le voyageur
+2. Partage ton enthousiasme pour les destinations
+3. MAIS ne donne JAMAIS d'itinéraires détaillés complets
+4. TOUJOURS conclure en invitant à contacter Jess pour la planification détaillée
+
+EXEMPLE de bonne réponse :
+La Thaïlande est magnifique ! Budget environ 1500-2000 CAD pour 2 semaines. 
+Les incontournables : Bangkok, Chiang Mai, les îles du Sud.
+
+Pour créer un itinéraire sur mesure adapté à VOS envies précises (hébergements, activités jour par jour, bons plans secrets), je vous invite à contacter Jess directement. 
+
+Elle créera un carnet de voyage personnalisé rien que pour vous !
+
+DEVISE À UTILISER : ${c.req.header('X-User-Currency') || 'EUR'} (${c.req.header('X-User-Country') || 'France'})
+
+FORMAT : Réponses structurées avec sauts de ligne pour la lisibilité.`
+    })
+    
+    // Extrait la réponse de Claude
+    const aiMessage = response.content[0].type === 'text' 
+      ? response.content[0].text 
+      : 'Désolé, je ne peux pas répondre pour le moment.'
+
+    return c.json({ 
+      reply: aiMessage,
+      usage: response.usage
+    })
+
+  } catch (error) {
+    console.error('Erreur API:', error)
+    return c.json({ error: 'Erreur lors de la communication avec l\'IA' }, 500)
+  }
+})
 
 // ============================================
 // PAGE D'ACCUEIL
