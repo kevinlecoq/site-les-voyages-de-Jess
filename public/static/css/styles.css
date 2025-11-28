@@ -1,7 +1,7 @@
 /* Palette de couleurs inspirée de Destinaslow */
 :root {
   /* Couleurs principales */
-  --color-primary: #0F4C81;
+  --color-primary: #92B5A8; /* Vert sauge */
   --color-secondary: #C46A3B;
   
   /* Couleurs d'arrière-plan */
@@ -42,7 +42,7 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Alice', serif;
   color: var(--color-text-primary);
   background-color: var(--color-bg-white);
   line-height: 1.6;
@@ -51,7 +51,7 @@ body {
 
 /* Typographie */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Brittany Signature', cursive;
   font-weight: 700;
   line-height: 1.2;
   margin-bottom: var(--spacing-sm);
@@ -83,7 +83,7 @@ p {
   left: -300px;
   width: 300px;
   height: 100vh;
-  background: linear-gradient(135deg, var(--color-primary) 0%, #1a5f9e 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent-green) 100%);
   transition: left 0.3s ease;
   z-index: 1000;
   overflow-y: auto;
@@ -267,10 +267,20 @@ p {
 /* Grille des formules */
 .packages-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-md);
   margin-top: var(--spacing-lg);
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
 }
+
+@media (max-width: 768px) {
+  .packages-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 
 .package-card {
   background: white;
@@ -346,7 +356,7 @@ p {
 }
 
 .btn-primary:hover {
-  background-color: #0d3f6a;
+  background-color: #7a9b8e;
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
@@ -491,3 +501,4 @@ p {
     grid-template-columns: 1fr;
   }
 }
+
