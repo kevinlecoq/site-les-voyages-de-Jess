@@ -128,5 +128,47 @@
     }
   });
 
+  
+  // ============================================
+  // GESTION DES CLICS SUR LES TAGS DE DESTINATIONS
+  // ============================================
+  
+  // Fonction pour ouvrir le chatbot avec un message pré-rempli
+  function openChatWithMessage(destination) {
+    // Ouvrir le widget
+    widgetWindow.classList.remove('chat-widget-hidden');
+    
+    // Pré-remplir le champ de saisie
+    userInput.value = `Je souhaite partir en ${destination}`;
+    
+    // Focus sur le champ
+    userInput.focus();
+    
+    // Optionnel : Envoyer automatiquement le message
+    sendMessage();
+  }
+  
+  // Attacher les événements aux tags de destinations
+  function attachDestinationTags() {
+    const countryTags = document.querySelectorAll('.country-tag');
+    
+    countryTags.forEach(tag => {
+      tag.style.cursor = 'pointer';
+      
+      tag.addEventListener('click', function() {
+        const destination = this.textContent.trim();
+        openChatWithMessage(destination);
+      });
+    });
+  }
+  
+  // Attacher les événements quand le DOM est chargé
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachDestinationTags);
+  } else {
+    attachDestinationTags();
+  }
+
   console.log('✅ Chatbot Les Voyages de Jess chargé');
 })();
+

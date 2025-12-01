@@ -58,7 +58,8 @@ app.use('*', jsxRenderer(({ children, title }) => {
               <li><a href="/"><i class="fas fa-home"></i> Accueil</a></li>
               <li><a href="/qui-suis-je"><i class="fas fa-user"></i> Qui suis-je?</a></li>
               <li><a href="/mes-formules"><i class="fas fa-suitcase"></i> Mes Formules</a></li>
-              <li><a href="/voyage-sur-mesure"><i class="fas fa-map-marked-alt"></i> Voyage sur Mesure</a></li>
+              <li><a href="/destinations"><i class="fas fa-globe"></i> Mes Destinations</a></li>
+	      <li><a href="/voyage-sur-mesure"><i class="fas fa-map-marked-alt"></i> Voyage sur Mesure</a></li>
               <li><a href="/faq"><i class="fas fa-question-circle"></i> FAQ</a></li>
               <li><a href="/blog"><i class="fas fa-book-open"></i> Blog</a></li>
               <li><a href="/contact"><i class="fas fa-envelope"></i> Contact</a></li>
@@ -176,27 +177,105 @@ app.post('/api/chat', async (c) => {
       model: 'claude-3-haiku-20240307',
       max_tokens: 1024,
       messages: messages,
-      system: `Tu es un assistant de voyage expert pour 'Les Voyages de Jess'. 
+      system: `Tu es un assistant de voyage expert pour 'Les Voyages de Jess'.
 
-TON RÔLE : Inspirer et conseiller, MAIS pas remplacer Jess.
+TON RÔLE :
+Inspirer et conseiller, MAIS pas remplacer Jess.
 
-RÈGLES IMPORTANTES :
-1. Donne des idées générales et inspire le voyageur
+⚠️⚠️⚠️ RÈGLE ABSOLUE CRITIQUE ⚠️⚠️⚠️
+TU NE PEUX SUGGÉRER **QUE** LES PAYS DE CETTE LISTE.
+SI UN PAYS N'EST PAS DANS CETTE LISTE → TU NE PEUX PAS LE SUGGÉRER.
+AUCUNE EXCEPTION. JAMAIS.
+
+DESTINATIONS COUVERTES PAR JESS - LISTE EXHAUSTIVE ET COMPLÈTE:
+
+🌍 EUROPE (22 pays):
+France, Espagne, Italie, Angleterre, Irlande, Écosse, Allemagne, Autriche, République Tchèque, Hongrie, Roumanie, Norvège, Suède, Finlande, Danemark, Suisse, Grèce, Croatie, Malte, Portugal, Monténégro, Capitales européennes
+
+🌏 ASIE (5 destinations):
+Thaïlande, Laos, Cambodge, Turquie, Indonésie (Bali uniquement)
+
+🌎 AMÉRIQUE DU NORD (3 pays):
+Canada, USA, Mexique
+
+🌎 AMÉRIQUE CENTRALE (2 pays):
+Guatemala, Costa Rica
+
+🌎 AMÉRIQUE DU SUD (4 pays):
+Pérou, Bolivie, Argentine, Brésil
+
+TOTAL: 36 DESTINATIONS SEULEMENT.
+
+⛔ PAYS QUE TU NE DOIS **JAMAIS** SUGGÉRER (exemples):
+Afrique du Sud, Tanzanie, Kenya, Namibie, Botswana, Zimbabwe, Islande, Japon, Chine, Corée, Vietnam, Nouvelle-Zélande, Australie, Égypte, Maroc, Tunisie, Inde, Népal, Russie, Ukraine, Chili, Colombie, Équateur, Venezuela, Cuba, République Dominicaine, Bahamas
+
+RÈGLES IMPORTANTES:
+
+1. Donne des idées GÉNÉRALES et inspire (ambiance, type d'expérience)
 2. Partage ton enthousiasme pour les destinations
-3. MAIS ne donne JAMAIS d'itinéraires détaillés complets
-4. TOUJOURS conclure en invitant à contacter Jess pour la planification détaillée
+3. Ne donne JAMAIS d'itinéraires détaillés complets
+4. Ne donne JAMAIS de listes d'activités spécifiques ni de noms de lieux précis
+5. TOUJOURS conclure en invitant à contacter Jess
 
-EXEMPLE de bonne réponse :
-La Thaïlande est magnifique ! Budget environ 1500-2000 CAD pour 2 semaines. 
-Les incontournables : Bangkok, Chiang Mai, les îles du Sud.
+6. ⚠️ SI LA DESTINATION DEMANDÉE N'EST PAS DANS LA LISTE:
 
-Pour créer un itinéraire sur mesure adapté à VOS envies précises (hébergements, activités jour par jour, bons plans secrets), je vous invite à contacter Jess directement. 
+   ÉTAPE 1: Dis clairement que Jess ne couvre pas ce pays
+   
+   ÉTAPE 2: Identifie le TYPE de voyage:
+   - Nature/Aventure → UNIQUEMENT: Costa Rica, Norvège, Pérou, Canada, Argentine, Finlande
+   - Culture/Histoire → UNIQUEMENT: Grèce, Turquie, Italie, Pérou, Espagne, Portugal
+   - Plages/Îles → UNIQUEMENT: Grèce, Croatie, Indonésie (Bali), Mexique, Portugal, Malte
+   - Asie → UNIQUEMENT: Thaïlande, Indonésie (Bali), Cambodge, Laos, Turquie
+   - Afrique → AUCUNE DESTINATION AFRICAINE N'EST COUVERTE
+   
+   ÉTAPE 3: Suggère 2-3 pays de la LISTE UNIQUEMENT
+   
+   ÉTAPE 4: Vérifie 3 FOIS que chaque pays suggéré est dans la liste
+   
+   ÉTAPE 5: Si tu n'es PAS CERTAIN à 100% → Ne suggère QUE 2 pays au lieu de 3
 
-Elle créera un carnet de voyage personnalisé rien que pour vous !
+7. EXEMPLES OBLIGATOIRES À SUIVRE:
 
-DEVISE À UTILISER : ${c.req.header('X-User-Currency') || 'EUR'} (${c.req.header('X-User-Country') || 'France'})
+   ❓ Zimbabwe / Namibie / Tanzanie / Afrique du Sud / Kenya / Botswana
+   ✅ "Malheureusement, Jess ne propose pas de services en Afrique pour le moment. Si vous recherchez nature et aventure, voici des destinations couvertes:
+   - Costa Rica: Nature luxuriante et biodiversité
+   - Norvège: Paysages grandioses et fjords
+   - Pérou: Diversité naturelle et culture andine
+   Je vous invite à contacter Jess ! 😊"
 
-FORMAT : Réponses structurées avec sauts de ligne pour la lisibilité.`
+   ❓ Japon / Chine / Vietnam / Corée
+   ✅ "Malheureusement, Jess ne propose pas de services pour ce pays. Pour une immersion asiatique:
+   - Thaïlande: Culture vibrante et hospitalité
+   - Indonésie (Bali): Spiritualité et traditions
+   - Cambodge: Patrimoine historique exceptionnel
+   Je vous invite à contacter Jess ! 😊"
+
+   ❓ Australie / Nouvelle-Zélande
+   ✅ "Malheureusement, Jess ne propose pas de services en Océanie. Pour nature et aventure:
+   - Costa Rica: Biodiversité unique
+   - Canada: Immensité naturelle
+   - Norvège: Beautés sauvages
+   Je vous invite à contacter Jess ! 😊"
+
+   ❓ Islande
+   ✅ "Malheureusement, Jess ne propose pas de services pour l'Islande. Pour des paysages nordiques:
+   - Norvège: Fjords et aurores boréales
+   - Finlande: Nature préservée scandinave
+   - Canada: Grands espaces nordiques
+   Je vous invite à contacter Jess ! 😊"
+
+🎯 VÉRIFICATION AVANT CHAQUE RÉPONSE:
+Avant de suggérer un pays, pose-toi ces 3 questions:
+1. Ce pays est-il EXPLICITEMENT dans la liste des 36 destinations ?
+2. Ai-je vérifié 2 fois qu'il est bien dans la liste ?
+3. Suis-je CERTAIN à 100% ?
+
+Si NON à une seule question → NE SUGGÈRE PAS CE PAYS.
+
+Utilise toujours la devise: ${c.req.header('User-Currency') || 'CAD'}
+Pays de l'utilisateur: ${c.req.header('User-Country') || 'Canada'}
+
+Structure tes réponses clairement.`
     })
     
     // Extrait la réponse de Claude
@@ -527,6 +606,114 @@ app.get('/voyage-sur-mesure', (c) => {
 // ============================================
 // PAGE FAQ
 // ============================================
+// ============================================
+// PAGE DESTINATIONS
+// ============================================
+app.get('/destinations', (c) => {
+  return c.render(
+    <>
+      <section class="hero" style="min-height: 40vh;">
+        <h1 class="hero-title">Mes Destinations</h1>
+        <p class="hero-subtitle">Les pays que je connais et pour lesquels je propose mes services</p>
+      </section>
+
+      <section class="section">
+        <div style="max-width: 900px; margin: 0 auto; text-align: center; padding: 2rem; background: var(--color-bg-warm); border-radius: var(--radius-lg); margin-bottom: 3rem;">
+          <p style="font-size: 1.1rem; line-height: 1.8; color: var(--color-text-primary);">
+            Je propose mes services uniquement pour les destinations que je connais, afin de vous garantir des conseils authentiques et des recommandations de confiance.
+            Cela me permet de vous accompagner de manière plus juste et personnalisée.
+          </p>
+        </div>
+
+        <div class="destinations-grid">
+          <div class="destination-continent">
+            <h2 class="continent-title">🌍 Europe</h2>
+            <div class="countries-list">
+              <span class="country-tag">France</span>
+              <span class="country-tag">Espagne</span>
+              <span class="country-tag">Italie</span>
+              <span class="country-tag">Angleterre</span>
+              <span class="country-tag">Irlande</span>
+              <span class="country-tag">Écosse</span>
+              <span class="country-tag">Allemagne</span>
+              <span class="country-tag">Autriche</span>
+              <span class="country-tag">République Tchèque</span>
+              <span class="country-tag">Hongrie</span>
+              <span class="country-tag">Roumanie</span>
+              <span class="country-tag">Norvège</span>
+              <span class="country-tag">Suède</span>
+              <span class="country-tag">Finlande</span>
+              <span class="country-tag">Danemark</span>
+              <span class="country-tag">Suisse</span>
+              <span class="country-tag">Grèce</span>
+              <span class="country-tag">Croatie</span>
+              <span class="country-tag">Malte</span>
+              <span class="country-tag">Portugal</span>
+              <span class="country-tag">Monténégro</span>
+              <span class="country-tag">Capitales européennes</span>
+            </div>
+          </div>
+
+          <div class="destination-continent">
+            <h2 class="continent-title">🌏 Asie</h2>
+            <div class="countries-list">
+              <span class="country-tag">Thaïlande</span>
+              <span class="country-tag">Laos</span>
+              <span class="country-tag">Cambodge</span>
+              <span class="country-tag">Turquie</span>
+              <span class="country-tag">Indonésie (Bali)</span>
+            </div>
+          </div>
+
+          <div class="destination-continent">
+            <h2 class="continent-title">🌎 Amérique du Nord</h2>
+            <div class="countries-list">
+              <span class="country-tag">Canada</span>
+              <span class="country-tag">USA</span>
+              <span class="country-tag">Mexique</span>
+            </div>
+          </div>
+
+          <div class="destination-continent">
+            <h2 class="continent-title">🌎 Amérique Centrale</h2>
+            <div class="countries-list">
+              <span class="country-tag">Guatemala</span>
+              <span class="country-tag">Costa Rica</span>
+            </div>
+          </div>
+
+          <div class="destination-continent">
+            <h2 class="continent-title">🌎 Amérique du Sud</h2>
+            <div class="countries-list">
+              <span class="country-tag">Pérou</span>
+              <span class="country-tag">Bolivie</span>
+              <span class="country-tag">Argentine</span>
+              <span class="country-tag">Brésil</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 3rem; padding: 2rem;">
+          <h3 style="margin-bottom: 1rem;">Votre destination ne figure pas dans cette liste ?</h3>
+          <p style="font-size: 1.1rem; color: var(--color-text-secondary); margin-bottom: 2rem;">
+            Contactez-moi ! Je peux vous orienter vers des destinations similaires ou discuter de votre projet.
+          </p>
+          <a href="/contact" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+            <i class="fas fa-paper-plane"></i> Me contacter
+          </a>
+        </div>
+      </section>
+    </>,
+    { title: 'Mes Destinations - Les Voyages de Jess' }
+  )
+})
+
+
+
+
+
+
+
 app.get('/faq', async (c) => {
   const faqs = await c.env.db.prepare('SELECT * FROM faqs ORDER BY sort_order ASC').all();
 

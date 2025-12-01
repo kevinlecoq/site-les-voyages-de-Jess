@@ -726,3 +726,81 @@ p {
   }
 }
 
+
+
+
+/* ============================================
+   PAGE DESTINATIONS
+   ============================================ */
+
+.destinations-grid {
+  display: grid;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.destination-continent {
+  background: white;
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition: transform 0.3s ease;
+}
+
+.destination-continent:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.continent-title {
+  color: var(--color-primary);
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-bg-warm);
+}
+
+.countries-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.country-tag {
+  background: linear-gradient(135deg, var(--color-bg-warm) 0%, #f5ede3 100%);
+  color: var(--color-text-primary);
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-family: 'Alice', serif;
+  transition: all 0.3s ease;
+  border: 1px solid var(--color-primary);
+}
+
+.country-tag:hover {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent-green) 100%);
+  color: white;
+  transform: scale(1.05);
+  cursor: pointer;
+}
+
+/* Responsive destinations */
+@media (max-width: 768px) {
+  .destinations-grid {
+    gap: 1.5rem;
+  }
+  
+  .destination-continent {
+    padding: 1.5rem;
+  }
+  
+  .continent-title {
+    font-size: 1.5rem;
+  }
+  
+  .country-tag {
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
