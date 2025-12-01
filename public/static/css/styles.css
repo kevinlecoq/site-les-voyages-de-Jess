@@ -223,28 +223,53 @@ p {
 
 /* Section Hero */
 .hero {
-  background: linear-gradient(135deg, var(--color-bg-warm) 0%, #e8d5c4 100%);
-  padding: var(--spacing-xl) var(--spacing-md);
+  background-image: url('/static/images/hero-background.jpg');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  padding: 4rem 2rem;
   text-align: center;
-  min-height: 60vh;
+  min-height: 70vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 }
 
+/* Overlay sombre pour lisibilité */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+/* Texte au-dessus de l'overlay */
+.hero * {
+  position: relative;
+  z-index: 2;
+  color: white !important;
+}
+
 .hero-title {
   font-size: 3rem;
   margin-bottom: var(--spacing-sm);
+  color: white !important;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   animation: fadeInUp 1s ease;
 }
 
 .hero-subtitle {
   font-size: 1.5rem;
-  color: var(--color-secondary);
+  color: white !important;
   font-family: 'Playfair Display', serif;
   font-style: italic;
   margin-bottom: var(--spacing-md);
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
   animation: fadeInUp 1.2s ease;
 }
 

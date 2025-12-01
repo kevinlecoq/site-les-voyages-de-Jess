@@ -189,19 +189,19 @@ AUCUNE EXCEPTION. JAMAIS.
 
 DESTINATIONS COUVERTES PAR JESS - LISTE EXHAUSTIVE ET COMPLÈTE:
 
-🌍 EUROPE (22 pays):
+ EUROPE (22 pays):
 France, Espagne, Italie, Angleterre, Irlande, Écosse, Allemagne, Autriche, République Tchèque, Hongrie, Roumanie, Norvège, Suède, Finlande, Danemark, Suisse, Grèce, Croatie, Malte, Portugal, Monténégro, Capitales européennes
 
-🌏 ASIE (5 destinations):
+ ASIE (5 destinations):
 Thaïlande, Laos, Cambodge, Turquie, Indonésie (Bali uniquement)
 
-🌎 AMÉRIQUE DU NORD (3 pays):
+ AMÉRIQUE DU NORD (3 pays):
 Canada, USA, Mexique
 
-🌎 AMÉRIQUE CENTRALE (2 pays):
+ AMÉRIQUE CENTRALE (2 pays):
 Guatemala, Costa Rica
 
-🌎 AMÉRIQUE DU SUD (4 pays):
+ AMÉRIQUE DU SUD (4 pays):
 Pérou, Bolivie, Argentine, Brésil
 
 TOTAL: 36 DESTINATIONS SEULEMENT.
@@ -407,7 +407,7 @@ app.get('/qui-suis-je', async (c) => {
 
   return c.render(
     <>
-      <section class="hero" style="min-height: 40vh;">
+      <section class="hero">
         <h1 class="hero-title">Qui suis-je?</h1>
         <p class="hero-subtitle">Jessica, votre Travel Planner</p>
       </section>
@@ -463,7 +463,7 @@ app.get('/mes-formules', async (c) => {
 
   return c.render(
     <>
-      <section class="hero" style="min-height: 40vh;">
+      <section class="hero">
         <h1 class="hero-title">Mes Formules</h1>
         <p class="hero-subtitle">Choisissez celle qui correspond à vos envies</p>
       </section>
@@ -525,7 +525,7 @@ app.get('/mes-formules', async (c) => {
 app.get('/voyage-sur-mesure', (c) => {
   return c.render(
     <>
-      <section class="hero" style="min-height: 40vh;">
+      <section class="hero">
         <h1 class="hero-title">Votre Voyage sur Mesure</h1>
         <p class="hero-subtitle">Comment ça marche?</p>
       </section>
@@ -612,7 +612,7 @@ app.get('/voyage-sur-mesure', (c) => {
 app.get('/destinations', (c) => {
   return c.render(
     <>
-      <section class="hero" style="min-height: 40vh;">
+      <section class="hero">
         <h1 class="hero-title">Mes Destinations</h1>
         <p class="hero-subtitle">Les pays que je connais et pour lesquels je propose mes services</p>
       </section>
@@ -627,7 +627,7 @@ app.get('/destinations', (c) => {
 
         <div class="destinations-grid">
           <div class="destination-continent">
-            <h2 class="continent-title">🌍 Europe</h2>
+            <h2 class="continent-title">Europe</h2>
             <div class="countries-list">
               <span class="country-tag">France</span>
               <span class="country-tag">Espagne</span>
@@ -655,7 +655,7 @@ app.get('/destinations', (c) => {
           </div>
 
           <div class="destination-continent">
-            <h2 class="continent-title">🌏 Asie</h2>
+            <h2 class="continent-title">Asie</h2>
             <div class="countries-list">
               <span class="country-tag">Thaïlande</span>
               <span class="country-tag">Laos</span>
@@ -666,7 +666,7 @@ app.get('/destinations', (c) => {
           </div>
 
           <div class="destination-continent">
-            <h2 class="continent-title">🌎 Amérique du Nord</h2>
+            <h2 class="continent-title">Amérique du Nord</h2>
             <div class="countries-list">
               <span class="country-tag">Canada</span>
               <span class="country-tag">USA</span>
@@ -675,7 +675,7 @@ app.get('/destinations', (c) => {
           </div>
 
           <div class="destination-continent">
-            <h2 class="continent-title">🌎 Amérique Centrale</h2>
+            <h2 class="continent-title">Amérique Centrale</h2>
             <div class="countries-list">
               <span class="country-tag">Guatemala</span>
               <span class="country-tag">Costa Rica</span>
@@ -683,7 +683,7 @@ app.get('/destinations', (c) => {
           </div>
 
           <div class="destination-continent">
-            <h2 class="continent-title">🌎 Amérique du Sud</h2>
+            <h2 class="continent-title">Amérique du Sud</h2>
             <div class="countries-list">
               <span class="country-tag">Pérou</span>
               <span class="country-tag">Bolivie</span>
@@ -719,7 +719,7 @@ app.get('/faq', async (c) => {
 
   return c.render(
     <>
-      <section class="hero" style="min-height: 40vh;">
+      <section class="hero">
         <h1 class="hero-title">Questions Fréquentes</h1>
         <p class="hero-subtitle">Tout ce que vous devez savoir</p>
       </section>
@@ -762,7 +762,7 @@ app.get('/blog', async (c) => {
 
   return c.render(
     <>
-      <section class="hero" style="min-height: 40vh;">
+      <section class="hero">
         <h1 class="hero-title">Blog</h1>
         <p class="hero-subtitle">Récits, conseils et inspirations voyage</p>
       </section>
@@ -810,7 +810,7 @@ app.get('/blog', async (c) => {
 app.get('/contact', (c) => {
   return c.render(
     <>
-      <section class="hero" style="min-height: 40vh;">
+      <section class="hero">
         <h1 class="hero-title">Contact</h1>
         <p class="hero-subtitle">Commençons à planifier votre voyage</p>
       </section>
