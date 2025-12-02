@@ -174,8 +174,8 @@ app.post('/api/chat', async (c) => {
 
     // Envoie le message à Claude avec tout l'historique
     const response = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 1024,
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
       messages: messages,
       system: `Tu es un assistant de voyage expert pour 'Les Voyages de Jess'.
 
