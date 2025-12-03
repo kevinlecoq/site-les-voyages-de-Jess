@@ -3,17 +3,47 @@ import { cors } from 'hono/cors'
 import { serveStatic } from 'hono/cloudflare-workers'
 import { jsxRenderer } from 'hono/jsx-renderer'
 import Anthropic from '@anthropic-ai/sdk'
+import { setCookie, getCookie } from 'hono/cookie'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 
 // Types pour les bindings Cloudflare
 type Bindings = {
   db: D1Database;
   ANTHROPIC_API_KEY: string;
+  JWT_SECRET: string;
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
 
 // Middleware CORS pour les API
 app.use('/api/*', cors())
+
+// Middleware de protection pour les routes admin
+app.use('/admin/*', async (c, next) => {
+  const path = new URL(c.req.url).pathname
+  
+  // Ne pas protéger la page de login
+  if (path === '/admin/login') {
+    await next()
+    return
+  }
+  
+  // Vérifier le token JWT dans le cookie
+  const token = getCookie(c, 'auth_token')
+  
+  if (!token) {
+    return c.redirect('/admin/login')
+  }
+  
+  try {
+    const decoded = jwt.verify(token, c.env.JWT_SECRET)
+    c.set('user', decoded)
+    await next()
+  } catch (error) {
+    return c.redirect('/admin/login')
+  }
+})
 
 // Servir les fichiers statiques
 app.use('/static/*', serveStatic({ root: './public' }))
@@ -102,6 +132,11 @@ app.use('*', jsxRenderer(({ children, title }) => {
             </div>
           </div>
           <div class="footer-bottom">
+            <div style="text-align: center; padding: 0.5rem 0; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 1rem;">
+              <a href="/admin/login" style="color: rgba(255,255,255,0.5); font-size: 0.8rem; text-decoration: none;">
+                Accès admin
+              </a>
+            </div>
             <p>&copy; {new Date().getFullYear()} Les Voyages de Jess. Tous droits réservés.</p>
           </div>
         </footer>
@@ -972,3 +1007,179 @@ app.get('/api/settings', async (c) => {
 })
 
 export default app
+
+// ============================================
+// ROUTES ADMIN - AUTHENTIFICATION
+// ============================================
+
+// Page de connexion admin
+app.get('/admin/login', (c) => {
+  return c.render(
+    <>
+      <div style="max-width: 400px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <h1 style="text-align: center; margin-bottom: 2rem; color: var(--color-primary);">Connexion Admin</h1>
+        
+        <form method="POST" action="/admin/login">
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Email</label>
+            <input 
+              type="email" 
+              name="email" 
+              required 
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;"
+            />
+          </div>
+          
+          <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Mot de passe</label>
+            <input 
+              type="password" 
+              name="password" 
+              required 
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;"
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            style="width: 100%; padding: 0.75rem; font-size: 1rem;"
+          >
+            Se connecter
+          </button>
+        </form>
+      </div>
+    </>,
+    { title: 'Connexion Admin - Les Voyages de Jess' }
+  )
+})
+
+// Traitement de la connexion
+app.post('/admin/login', async (c) => {
+  const body = await c.req.parseBody()
+  const email = body.email as string
+  const password = body.password as string  
+  console.log('=== DEBUG LOGIN ===')
+  console.log('Email saisi:', email)
+  console.log('Password saisi:', password)
+  
+  // Chercher l'utilisateur dans la DB
+  const user = await c.env.db
+    .prepare('SELECT * FROM admin_users WHERE email = ?')
+    .bind(email)
+    .first()
+
+  console.log('User trouvé:', user)  
+  
+  if (!user) {
+    return c.render(
+      <>
+        <div style="max-width: 400px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <div style="color: red; text-align: center; margin-bottom: 1rem; padding: 1rem; background: #ffe6e6; border-radius: 4px;">
+            ❌ Email ou mot de passe incorrect
+          </div>
+          <a href="/admin/login" class="btn btn-secondary" style="display: block; text-align: center;">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  // Vérifier le mot de passe
+  const isPasswordValid = bcrypt.compareSync(password, user.password_hash)
+  console.log('Password valid:', isPasswordValid)
+  if (!isPasswordValid) {
+    return c.render(
+      <>
+        <div style="max-width: 400px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <div style="color: red; text-align: center; margin-bottom: 1rem; padding: 1rem; background: #ffe6e6; border-radius: 4px;">
+            ❌ Email ou mot de passe incorrect
+          </div>
+          <a href="/admin/login" class="btn btn-secondary" style="display: block; text-align: center;">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  // Créer le token JWT
+  const token = jwt.sign(
+    { userId: user.id, email: user.email },
+    c.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  )
+  
+  // Définir le cookie
+  setCookie(c, 'auth_token', token, {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'Lax',
+    maxAge: 604800
+  })
+  
+  return c.redirect('/admin')
+})
+
+
+// Page d'accueil admin (protégée)
+app.get('/admin', (c) => {
+  const user = c.get('user')
+  
+  return c.render(
+    <>
+      <div style="max-width: 1200px; margin: 2rem auto; padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid var(--color-primary);">
+          <h1>Panneau d'administration</h1>
+          <a href="/admin/logout" class="btn btn-secondary">
+            <i class="fas fa-sign-out-alt"></i> Déconnexion
+          </a>
+        </div>
+        
+        <p style="font-size: 1.2rem; margin-bottom: 2rem;">
+          Bienvenue <strong>{user.email}</strong> ! 👋
+        </p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+          <a href="/admin/blog" style="display: block; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-decoration: none; color: inherit; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-book-open" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 1rem;"></i>
+            <h3 style="margin-bottom: 0.5rem;">Gérer le Blog</h3>
+            <p style="color: var(--color-text-secondary);">Créer et modifier des articles</p>
+          </a>
+          
+          <a href="/admin/media" style="display: block; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-decoration: none; color: inherit; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-images" style="font-size: 3rem; color: var(--color-secondary); margin-bottom: 1rem;"></i>
+            <h3 style="margin-bottom: 0.5rem;">Gérer les Photos</h3>
+            <p style="color: var(--color-text-secondary);">Uploader et gérer les images</p>
+          </a>
+          
+          <a href="/admin/formules" style="display: block; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-decoration: none; color: inherit; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-suitcase" style="font-size: 3rem; color: var(--color-accent-green); margin-bottom: 1rem;"></i>
+            <h3 style="margin-bottom: 0.5rem;">Gérer les Formules</h3>
+            <p style="color: var(--color-text-secondary);">Modifier les formules de voyage</p>
+          </a>
+          
+          <a href="/admin/faq" style="display: block; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-decoration: none; color: inherit; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-question-circle" style="font-size: 3rem; color: #f39c12; margin-bottom: 1rem;"></i>
+            <h3 style="margin-bottom: 0.5rem;">Gérer la FAQ</h3>
+            <p style="color: var(--color-text-secondary);">Ajouter et modifier les FAQs</p>
+          </a>
+        </div>
+      </div>
+    </>,
+    { title: 'Admin - Les Voyages de Jess' }
+  )
+})
+
+// Déconnexion
+app.get('/admin/logout', (c) => {
+  setCookie(c, 'auth_token', '', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'Lax',
+    maxAge: 0
+  })
+  
+  return c.redirect('/admin/login')
+})
+
+
