@@ -1129,10 +1129,15 @@ app.get('/admin', (c) => {
     <>
       <div style="max-width: 1200px; margin: 2rem auto; padding: 2rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid var(--color-primary);">
-          <h1>Panneau d'administration</h1>
-          <a href="/admin/logout" class="btn btn-secondary">
-            <i class="fas fa-sign-out-alt"></i> Déconnexion
-          </a>
+       <h1>Panneau d'administration</h1>
+          <div>
+            <a href="/admin/profil" class="btn btn-secondary" style="margin-right: 1rem;">
+              <i class="fas fa-user"></i> Mon profil
+            </a>
+            <a href="/admin/logout" class="btn btn-secondary">
+              <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </a>
+          </div>
         </div>
         
         <p style="font-size: 1.2rem; margin-bottom: 2rem;">
@@ -1169,6 +1174,242 @@ app.get('/admin', (c) => {
     { title: 'Admin - Les Voyages de Jess' }
   )
 })
+
+// Page Mon profil
+app.get('/admin/profil', (c) => {
+  const user = c.get('user')
+  
+  return c.render(
+    <>
+      <div style="max-width: 800px; margin: 2rem auto; padding: 2rem;">
+        <div style="margin-bottom: 2rem;">
+          <a href="/admin" style="color: var(--color-primary); text-decoration: none;">
+            <i class="fas fa-arrow-left"></i> Retour au panneau
+          </a>
+        </div>
+        
+        <h1 style="margin-bottom: 2rem;">Mon profil</h1>
+        
+        <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+          <h2 style="margin-bottom: 1.5rem;">Modifier mon email</h2>
+          <form method="POST" action="/admin/profil/email">
+            <div class="form-group">
+              <label class="form-label">Email actuel</label>
+              <input 
+                type="email" 
+                value={user.email} 
+                disabled 
+                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5;"
+              />
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Nouvel email *</label>
+              <input 
+                type="email" 
+                name="new_email" 
+                required 
+                class="form-input"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;"
+              />
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Mot de passe actuel (pour confirmer) *</label>
+              <input 
+                type="password" 
+                name="password" 
+                required 
+                class="form-input"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;"
+              />
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              Modifier l'email
+            </button>
+          </form>
+        </div>
+        
+        <div style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <h2 style="margin-bottom: 1.5rem;">Modifier mon mot de passe</h2>
+          <form method="POST" action="/admin/profil/password">
+            <div class="form-group">
+              <label class="form-label">Mot de passe actuel *</label>
+              <input 
+                type="password" 
+                name="current_password" 
+                required 
+                class="form-input"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;"
+              />
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Nouveau mot de passe *</label>
+              <input 
+                type="password" 
+                name="new_password" 
+                required 
+                minlength="8"
+                class="form-input"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;"
+              />
+              <small style="color: var(--color-text-secondary);">Minimum 8 caractères</small>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Confirmer le nouveau mot de passe *</label>
+              <input 
+                type="password" 
+                name="confirm_password" 
+                required 
+                minlength="8"
+                class="form-input"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;"
+              />
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              Modifier le mot de passe
+            </button>
+          </form>
+        </div>
+      </div>
+    </>,
+    { title: 'Mon profil - Admin' }
+  )
+})
+// Modifier l'email
+app.post('/admin/profil/email', async (c) => {
+  const user = c.get('user')
+  const body = await c.req.parseBody()
+  const new_email = body.new_email as string
+  const password = body.password as string
+  
+  // Vérifier le mot de passe actuel
+  const currentUser = await c.env.db
+    .prepare('SELECT * FROM admin_users WHERE id = ?')
+    .bind(user.userId)
+    .first()
+  
+  const isPasswordValid = bcrypt.compareSync(password, currentUser.password_hash)
+  
+  if (!isPasswordValid) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Mot de passe incorrect
+          </div>
+          <a href="/admin/profil" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  // Mettre à jour l'email
+  await c.env.db
+    .prepare('UPDATE admin_users SET email = ? WHERE id = ?')
+    .bind(new_email, user.userId)
+    .run()
+  
+  // Créer un nouveau token avec le nouvel email
+  const token = jwt.sign(
+    { userId: user.userId, email: new_email },
+    c.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  )
+  
+  setCookie(c, 'auth_token', token, {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'Lax',
+    maxAge: 604800
+  })
+  
+  return c.render(
+    <>
+      <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+        <div style="color: green; padding: 1rem; background: #d4edda; border-radius: 4px; margin-bottom: 1rem;">
+          ✅ Email modifié avec succès !
+        </div>
+        <a href="/admin/profil" class="btn btn-primary">Retour au profil</a>
+      </div>
+    </>,
+    { title: 'Succès - Admin' }
+  )
+})
+
+// Modifier le mot de passe
+app.post('/admin/profil/password', async (c) => {
+  const user = c.get('user')
+  const body = await c.req.parseBody()
+  const current_password = body.current_password as string
+  const new_password = body.new_password as string
+  const confirm_password = body.confirm_password as string
+  
+  // Vérifier que les mots de passe correspondent
+  if (new_password !== confirm_password) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Les mots de passe ne correspondent pas
+          </div>
+          <a href="/admin/profil" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  // Vérifier le mot de passe actuel
+  const currentUser = await c.env.db
+    .prepare('SELECT * FROM admin_users WHERE id = ?')
+    .bind(user.userId)
+    .first()
+  
+  const isPasswordValid = bcrypt.compareSync(current_password, currentUser.password_hash)
+  
+  if (!isPasswordValid) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Mot de passe actuel incorrect
+          </div>
+          <a href="/admin/profil" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  // Hasher le nouveau mot de passe
+  const salt = bcrypt.genSaltSync(10)
+  const new_password_hash = bcrypt.hashSync(new_password, salt)
+  
+  // Mettre à jour le mot de passe
+  await c.env.db
+    .prepare('UPDATE admin_users SET password_hash = ? WHERE id = ?')
+    .bind(new_password_hash, user.userId)
+    .run()
+  
+  return c.render(
+    <>
+      <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+        <div style="color: green; padding: 1rem; background: #d4edda; border-radius: 4px; margin-bottom: 1rem;">
+          ✅ Mot de passe modifié avec succès !
+        </div>
+        <a href="/admin/profil" class="btn btn-primary">Retour au profil</a>
+      </div>
+    </>,
+    { title: 'Succès - Admin' }
+  )
+})
+
 
 // Déconnexion
 app.get('/admin/logout', (c) => {
