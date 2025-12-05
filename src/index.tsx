@@ -1409,6 +1409,663 @@ app.post('/admin/profil/password', async (c) => {
     { title: 'Succès - Admin' }
   )
 })
+// ============================================
+// ROUTES ADMIN - GESTION DU BLOG
+// ============================================
+
+// Liste des articles du blog
+app.get('/admin/blog', async (c) => {
+  const posts = await c.env.db
+    .prepare('SELECT * FROM blog_posts ORDER BY created_at DESC')
+    .all()
+  
+  return c.render(
+    <>
+      <div style="max-width: 1200px; margin: 2rem auto; padding: 2rem;">
+        <div style="margin-bottom: 2rem;">
+          <a href="/admin" style="color: var(--color-primary); text-decoration: none;">
+            <i class="fas fa-arrow-left"></i> Retour au panneau
+          </a>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h1>Gestion du Blog</h1>
+          <a href="/admin/blog/new" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nouvel article
+          </a>
+        </div>
+        
+        {posts.results.length === 0 ? (
+          <div style="text-align: center; padding: 3rem; background: white; border-radius: 8px;">
+            <i class="fas fa-book-open" style="font-size: 4rem; color: var(--color-text-secondary); margin-bottom: 1rem;"></i>
+            <p style="font-size: 1.2rem; color: var(--color-text-secondary);">Aucun article pour le moment</p>
+            <a href="/admin/blog/new" class="btn btn-primary" style="margin-top: 1rem;">
+              Créer le premier article
+            </a>
+          </div>
+        ) : (
+          <div style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
+                  <th style="padding: 1rem; text-align: left;">Titre</th>
+                  <th style="padding: 1rem; text-align: left;">Date</th>
+                  <th style="padding: 1rem; text-align: left;">Statut</th>
+                  <th style="padding: 1rem; text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {posts.results.map((post: any) => (
+                  <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 1rem;">{post.title}</td>
+                    <td style="padding: 1rem;">
+                      {new Date(post.created_at).toLocaleDateString('fr-FR')}
+                    </td>
+                    <td style="padding: 1rem;">
+                      {post.published ? (
+                        <span style="color: green; font-weight: 600;">✅ Publié</span>
+                      ) : (
+                        <span style="color: orange; font-weight: 600;">📝 Brouillon</span>
+                      )}
+                    </td>
+                    <td style="padding: 1rem; text-align: right;">
+                      <a href={`/admin/blog/edit/${post.id}`} class="btn btn-secondary" style="margin-right: 0.5rem; font-size: 0.9rem; padding: 0.5rem 1rem;">
+                        <i class="fas fa-edit"></i> Modifier
+                      </a>
+                      <form method="POST" action={`/admin/blog/${post.id}/delete`} style="display: inline;">
+                        <button 
+                          type="submit" 
+                          onclick="return confirm('Supprimer cet article ?')"
+                          style="background: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.9rem;"
+                        >
+                          <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>,
+    { title: 'Gestion du Blog - Admin' }
+  )
+})
+// Formulaire de création d'article
+app.get('/admin/blog/new', (c) => {
+  return c.render(
+    <>
+      <div style="max-width: 900px; margin: 2rem auto; padding: 2rem;">
+        <div style="margin-bottom: 2rem;">
+          <a href="/admin/blog" style="color: var(--color-primary); text-decoration: none;">
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+          </a>
+        </div>
+        
+        <h1 style="margin-bottom: 2rem;">Nouvel article</h1>
+        
+        <form method="POST" action="/admin/blog" style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Titre *</label>
+            <input 
+              type="text" 
+              name="title" 
+              required 
+              class="form-input"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+            />
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Slug (URL) *</label>
+            <input 
+              type="text" 
+              name="slug" 
+              required 
+              class="form-input"
+              placeholder="mon-voyage-en-italie"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+            />
+            <small style="color: var(--color-text-secondary);">L'URL de l'article : /blog/mon-voyage-en-italie</small>
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Extrait</label>
+            <textarea 
+              name="excerpt" 
+              rows="3"
+              class="form-textarea"
+              placeholder="Court résumé de l'article..."
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; font-family: inherit;"
+            ></textarea>
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Contenu *</label>
+            <textarea 
+              name="content" 
+              rows="15"
+              required
+              class="form-textarea"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; font-family: inherit;"
+            ></textarea>
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="published" value="1" />
+              <span style="font-weight: 600;">Publier immédiatement</span>
+            </label>
+            <small style="color: var(--color-text-secondary); display: block; margin-top: 0.25rem;">
+              Si non coché, l'article sera sauvegardé en brouillon
+            </small>
+          </div>
+          
+          <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Enregistrer l'article
+            </button>
+            <a href="/admin/blog" class="btn btn-secondary">
+              Annuler
+            </a>
+          </div>
+        </form>
+      </div>
+    </>,
+    { title: 'Nouvel article - Admin' }
+  )
+})
+// Traiter la création d'article
+app.post('/admin/blog', async (c) => {
+  const body = await c.req.parseBody()
+  
+  const title = body.title as string
+  const slug = body.slug as string
+  const excerpt = (body.excerpt as string) || ''
+  const content = body.content as string
+  const published = body.published === '1' ? 1 : 0
+  
+  try {
+    await c.env.db
+      .prepare(`
+        INSERT INTO blog_posts (title, slug, excerpt, content, published, published_at, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `)
+      .bind(
+        title,
+        slug,
+        excerpt,
+        content,
+        published,
+        published ? new Date().toISOString() : null,
+        new Date().toISOString()
+      )
+      .run()
+    
+    return c.redirect('/admin/blog')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Erreur : {error.message}
+            <br />
+            <small>Le slug existe peut-être déjà ?</small>
+          </div>
+          <a href="/admin/blog/new" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+// Formulaire de modification d'article
+app.get('/admin/blog/edit/:id', async (c) => {
+  const id = c.req.param('id')
+  
+  const post = await c.env.db
+    .prepare('SELECT * FROM blog_posts WHERE id = ?')
+    .bind(id)
+    .first()
+  
+  if (!post) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Article non trouvé
+          </div>
+          <a href="/admin/blog" class="btn btn-secondary">Retour à la liste</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  return c.render(
+    <>
+      <div style="max-width: 900px; margin: 2rem auto; padding: 2rem;">
+        <div style="margin-bottom: 2rem;">
+          <a href="/admin/blog" style="color: var(--color-primary); text-decoration: none;">
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+          </a>
+        </div>
+        
+        <h1 style="margin-bottom: 2rem;">Modifier l'article</h1>
+        
+        <form method="POST" action={`/admin/blog/${id}`} style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Titre *</label>
+            <input 
+              type="text" 
+              name="title" 
+              value={post.title}
+              required 
+              class="form-input"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+            />
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Slug (URL) *</label>
+            <input 
+              type="text" 
+              name="slug" 
+              value={post.slug}
+              required 
+              class="form-input"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+            />
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Extrait</label>
+            <textarea 
+              name="excerpt" 
+              rows="3"
+              class="form-textarea"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; font-family: inherit;"
+            >{post.excerpt}</textarea>
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Contenu *</label>
+            <textarea 
+              name="content" 
+              rows="15"
+              required
+              class="form-textarea"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; font-family: inherit;"
+            >{post.content}</textarea>
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="published" value="1" checked={post.published === 1} />
+              <span style="font-weight: 600;">Publié</span>
+            </label>
+          </div>
+          
+          <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Enregistrer les modifications
+            </button>
+            <a href="/admin/blog" class="btn btn-secondary">
+              Annuler
+            </a>
+          </div>
+        </form>
+      </div>
+    </>,
+    { title: 'Modifier l\'article - Admin' }
+  )
+})
+// Traiter la modification d'article
+app.post('/admin/blog/:id', async (c) => {
+  const id = c.req.param('id')
+  const body = await c.req.parseBody()
+  
+  const title = body.title as string
+  const slug = body.slug as string
+  const excerpt = (body.excerpt as string) || ''
+  const content = body.content as string
+  const published = body.published === '1' ? 1 : 0
+  
+  try {
+    await c.env.db
+      .prepare(`
+        UPDATE blog_posts 
+        SET title = ?, slug = ?, excerpt = ?, content = ?, published = ?, updated_at = ?
+        WHERE id = ?
+      `)
+      .bind(title, slug, excerpt, content, published, new Date().toISOString(), id)
+      .run()
+    
+    return c.redirect('/admin/blog')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Erreur : {error.message}
+          </div>
+          <a href={`/admin/blog/edit/${id}`} class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+
+// Supprimer un article
+app.post('/admin/blog/:id/delete', async (c) => {
+  const id = c.req.param('id')
+  
+  try {
+    await c.env.db
+      .prepare('DELETE FROM blog_posts WHERE id = ?')
+      .bind(id)
+      .run()
+    
+    return c.redirect('/admin/blog')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Erreur lors de la suppression : {error.message}
+          </div>
+          <a href="/admin/blog" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+
+// ============================================
+// ROUTES ADMIN - GESTION DE LA FAQ
+// ============================================
+
+// Liste des FAQs
+app.get('/admin/faq', async (c) => {
+  const faqs = await c.env.db
+    .prepare('SELECT * FROM faqs ORDER BY sort_order ASC')
+    .all()
+  
+  return c.render(
+    <>
+      <div style="max-width: 1200px; margin: 2rem auto; padding: 2rem;">
+        <div style="margin-bottom: 2rem;">
+          <a href="/admin" style="color: var(--color-primary); text-decoration: none;">
+            <i class="fas fa-arrow-left"></i> Retour au panneau
+          </a>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h1>Gestion de la FAQ</h1>
+          <a href="/admin/faq/new" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nouvelle question
+          </a>
+        </div>
+        
+        {faqs.results.length === 0 ? (
+          <div style="text-align: center; padding: 3rem; background: white; border-radius: 8px;">
+            <i class="fas fa-question-circle" style="font-size: 4rem; color: var(--color-text-secondary); margin-bottom: 1rem;"></i>
+            <p style="font-size: 1.2rem; color: var(--color-text-secondary);">Aucune question pour le moment</p>
+            <a href="/admin/faq/new" class="btn btn-primary" style="margin-top: 1rem;">
+              Créer la première question
+            </a>
+          </div>
+        ) : (
+          <div style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            {faqs.results.map((faq: any) => (
+              <div style="padding: 1.5rem; border-bottom: 1px solid #eee;">
+                <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem;">
+                  <div style="flex: 1;">
+                    <h3 style="margin-bottom: 0.5rem; color: var(--color-primary);">{faq.question}</h3>
+                    <p style="color: var(--color-text-secondary); margin: 0;">{faq.answer}</p>
+                  </div>
+                  <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                    <a href={`/admin/faq/edit/${faq.id}`} class="btn btn-secondary" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+                      <i class="fas fa-edit"></i> Modifier
+                    </a>
+                    <form method="POST" action={`/admin/faq/${faq.id}/delete`} style="display: inline;">
+                      <button 
+                        type="submit" 
+                        onclick="return confirm('Supprimer cette question ?')"
+                        style="background: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.9rem;"
+                      >
+                        <i class="fas fa-trash"></i> Supprimer
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>,
+    { title: 'Gestion de la FAQ - Admin' }
+  )
+})
+
+// Formulaire de création de FAQ
+app.get('/admin/faq/new', (c) => {
+  return c.render(
+    <>
+      <div style="max-width: 800px; margin: 2rem auto; padding: 2rem;">
+        <div style="margin-bottom: 2rem;">
+          <a href="/admin/faq" style="color: var(--color-primary); text-decoration: none;">
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+          </a>
+        </div>
+        
+        <h1 style="margin-bottom: 2rem;">Nouvelle question</h1>
+        
+        <form method="POST" action="/admin/faq" style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Question *</label>
+            <input 
+              type="text" 
+              name="question" 
+              required 
+              class="form-input"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+            />
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Réponse *</label>
+            <textarea 
+              name="answer" 
+              rows="6"
+              required
+              class="form-textarea"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; font-family: inherit;"
+            ></textarea>
+          </div>
+          
+          <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Enregistrer
+            </button>
+            <a href="/admin/faq" class="btn btn-secondary">
+              Annuler
+            </a>
+          </div>
+        </form>
+      </div>
+    </>,
+    { title: 'Nouvelle question - Admin' }
+  )
+})
+
+// Traiter la création de FAQ
+app.post('/admin/faq', async (c) => {
+  const body = await c.req.parseBody()
+  const question = body.question as string
+  const answer = body.answer as string
+  
+  // Trouver le prochain sort_order
+  const maxOrder = await c.env.db
+    .prepare('SELECT MAX(sort_order) as max FROM faqs')
+    .first()
+  
+  const nextOrder = (maxOrder?.max || 0) + 1
+  
+  try {
+    await c.env.db
+      .prepare('INSERT INTO faqs (question, answer, sort_order) VALUES (?, ?, ?)')
+      .bind(question, answer, nextOrder)
+      .run()
+    
+    return c.redirect('/admin/faq')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Erreur : {error.message}
+          </div>
+          <a href="/admin/faq/new" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+
+// Formulaire de modification de FAQ
+app.get('/admin/faq/edit/:id', async (c) => {
+  const id = c.req.param('id')
+  
+  const faq = await c.env.db
+    .prepare('SELECT * FROM faqs WHERE id = ?')
+    .bind(id)
+    .first()
+  
+  if (!faq) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Question non trouvée
+          </div>
+          <a href="/admin/faq" class="btn btn-secondary">Retour à la liste</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  return c.render(
+    <>
+      <div style="max-width: 800px; margin: 2rem auto; padding: 2rem;">
+        <div style="margin-bottom: 2rem;">
+          <a href="/admin/faq" style="color: var(--color-primary); text-decoration: none;">
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+          </a>
+        </div>
+        
+        <h1 style="margin-bottom: 2rem;">Modifier la question</h1>
+        
+        <form method="POST" action={`/admin/faq/${id}`} style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Question *</label>
+            <input 
+              type="text" 
+              name="question" 
+              value={faq.question}
+              required 
+              class="form-input"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+            />
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Réponse *</label>
+            <textarea 
+              name="answer" 
+              rows="6"
+              required
+              class="form-textarea"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; font-family: inherit;"
+            >{faq.answer}</textarea>
+          </div>
+          
+          <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Enregistrer les modifications
+            </button>
+            <a href="/admin/faq" class="btn btn-secondary">
+              Annuler
+            </a>
+          </div>
+        </form>
+      </div>
+    </>,
+    { title: 'Modifier la question - Admin' }
+  )
+})
+
+// Traiter la modification de FAQ
+app.post('/admin/faq/:id', async (c) => {
+  const id = c.req.param('id')
+  const body = await c.req.parseBody()
+  const question = body.question as string
+  const answer = body.answer as string
+  
+  try {
+    await c.env.db
+      .prepare('UPDATE faqs SET question = ?, answer = ? WHERE id = ?')
+      .bind(question, answer, id)
+      .run()
+    
+    return c.redirect('/admin/faq')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Erreur : {error.message}
+          </div>
+          <a href={`/admin/faq/edit/${id}`} class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+
+// Supprimer une FAQ
+app.post('/admin/faq/:id/delete', async (c) => {
+  const id = c.req.param('id')
+  
+  try {
+    await c.env.db
+      .prepare('DELETE FROM faqs WHERE id = ?')
+      .bind(id)
+      .run()
+    
+    return c.redirect('/admin/faq')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Erreur : {error.message}
+          </div>
+          <a href="/admin/faq" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
 
 
 // Déconnexion
