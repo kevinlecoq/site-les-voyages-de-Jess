@@ -35,4 +35,5 @@ INSERT OR IGNORE INTO faqs (question, answer, category, sort_order) VALUES
 
 -- Utilisateur admin par défaut (mot de passe: ChangeMe123!)
 INSERT OR IGNORE INTO admin_users (email, password_hash, name) VALUES 
-  ('jessica@lesvoyagesdejess.ca', '$2a$10$K8zYvJ3lZxZ9pQqJ0vYGqeQXR1kZxQxYxZ9pQqJ0vYGqeQXR1kZxQ', 'Jessica');
+('jess@lesvoyagesdejess.ca', '$2b$10$J0rmjnrFaDsg2YMpLOCibO9e035Eu.F8kQR2m2Ip573Ah10b3iWXu', 'Jessica');
+
