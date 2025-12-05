@@ -2066,6 +2066,405 @@ app.post('/admin/faq/:id/delete', async (c) => {
     )
   }
 })
+// ============================================
+// ROUTES ADMIN - GESTION DES FORMULES
+// ============================================
+
+// Liste des formules
+app.get('/admin/formules', async (c) => {
+  const packages = await c.env.db
+    .prepare('SELECT * FROM travel_packages ORDER BY sort_order ASC')
+    .all()
+  
+  return c.render(
+    <>
+      <div style="max-width: 1200px; margin: 2rem auto; padding: 2rem;">
+        <div style="margin-bottom: 2rem;">
+          <a href="/admin" style="color: var(--color-primary); text-decoration: none;">
+            <i class="fas fa-arrow-left"></i> Retour au panneau
+          </a>
+        </div>
+        
+        <h1 style="margin-bottom: 2rem;">Gestion des Formules</h1>
+        
+        <div style="display: grid; gap: 2rem;">
+          {packages.results.map((pkg: any) => (
+            <div style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 2rem;">
+              <div style="display: flex; justify-content: space-between; align-items: start; gap: 2rem;">
+                <div style="flex: 1;">
+                  <h2 style="color: var(--color-primary); margin-bottom: 1rem;">{pkg.name}</h2>
+                  <p style="margin-bottom: 0.5rem;"><strong>Durée :</strong> {pkg.duration}</p>
+                  <p style="margin-bottom: 1rem;"><strong>Description :</strong> {pkg.description}</p>
+                  <div style="display: flex; gap: 2rem; margin-top: 1rem;">
+                    <div>
+                      <strong>Prix EUR :</strong> <span style="font-size: 1.2rem; color: var(--color-primary);">{pkg.price_eur}€</span>
+                    </div>
+                    <div>
+                      <strong>Prix CAD :</strong> <span style="font-size: 1.2rem; color: var(--color-primary);">{pkg.price_cad}$</span>
+                    </div>
+                  </div>
+                </div>
+                <a href={`/admin/formules/edit/${pkg.id}`} class="btn btn-primary">
+                  <i class="fas fa-edit"></i> Modifier
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>,
+    { title: 'Gestion des Formules - Admin' }
+  )
+})
+
+// Formulaire de modification de formule
+app.get('/admin/formules/edit/:id', async (c) => {
+  const id = c.req.param('id')
+  
+  const pkg = await c.env.db
+    .prepare('SELECT * FROM travel_packages WHERE id = ?')
+    .bind(id)
+    .first()
+  
+  if (!pkg) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Formule non trouvée
+          </div>
+          <a href="/admin/formules" class="btn btn-secondary">Retour à la liste</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  return c.render(
+    <>
+      <div style="max-width: 800px; margin: 2rem auto; padding: 2rem;">
+        <div style="margin-bottom: 2rem;">
+          <a href="/admin/formules" style="color: var(--color-primary); text-decoration: none;">
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+          </a>
+        </div>
+        
+        <h1 style="margin-bottom: 2rem;">Modifier la formule : {pkg.name}</h1>
+        
+        <form method="POST" action={`/admin/formules/${id}`} style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Nom de la formule *</label>
+            <input 
+              type="text" 
+              name="name" 
+              value={pkg.name}
+              required 
+              class="form-input"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+            />
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Durée *</label>
+            <input 
+              type="text" 
+              name="duration" 
+              value={pkg.duration}
+              required 
+              class="form-input"
+              placeholder="Ex: 7-14 jours"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+            />
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Description *</label>
+            <textarea 
+              name="description" 
+              rows="4"
+              required
+              class="form-textarea"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; font-family: inherit;"
+            >{pkg.description}</textarea>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="form-group">
+              <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Prix EUR (€) *</label>
+              <input 
+                type="number" 
+                name="price_eur" 
+                value={pkg.price_eur}
+                required 
+                min="0"
+                step="1"
+                class="form-input"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+              />
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Prix CAD ($) *</label>
+              <input 
+                type="number" 
+                name="price_cad" 
+                value={pkg.price_cad}
+                required 
+                min="0"
+                step="1"
+                class="form-input"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
+              />
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Enregistrer les modifications
+            </button>
+            <a href="/admin/formules" class="btn btn-secondary">
+              Annuler
+            </a>
+          </div>
+        </form>
+      </div>
+    </>,
+    { title: 'Modifier la formule - Admin' }
+  )
+})
+
+// Traiter la modification de formule
+app.post('/admin/formules/:id', async (c) => {
+  const id = c.req.param('id')
+  const body = await c.req.parseBody()
+  
+  const name = body.name as string
+  const duration = body.duration as string
+  const description = body.description as string
+  const price_eur = parseInt(body.price_eur as string)
+  const price_cad = parseInt(body.price_cad as string)
+  
+  try {
+    await c.env.db
+      .prepare('UPDATE travel_packages SET name = ?, duration = ?, description = ?, price_eur = ?, price_cad = ? WHERE id = ?')
+      .bind(name, duration, description, price_eur, price_cad, id)
+      .run()
+    
+    return c.redirect('/admin/formules')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Erreur : {error.message}
+          </div>
+          <a href={`/admin/formules/edit/${id}`} class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+// ============================================
+// ROUTES ADMIN - GESTION DES PHOTOS
+// ============================================
+
+// Liste et upload des photos
+app.get('/admin/media', async (c) => {
+  const photos = await c.env.db
+    .prepare('SELECT * FROM photos ORDER BY created_at DESC')
+    .all()
+  
+  return c.render(
+    <>
+      <div style="max-width: 1200px; margin: 2rem auto; padding: 2rem;">
+        <div style="margin-bottom: 2rem;">
+          <a href="/admin" style="color: var(--color-primary); text-decoration: none;">
+            <i class="fas fa-arrow-left"></i> Retour au panneau
+          </a>
+        </div>
+        
+        <h1 style="margin-bottom: 2rem;">Gestion des Photos</h1>
+        
+        <div style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 2rem; margin-bottom: 2rem;">
+          <h2 style="margin-bottom: 1rem;">Uploader une nouvelle photo</h2>
+          <p style="color: var(--color-text-secondary); margin-bottom: 1rem;">
+            Note : Pour le moment, l'upload de fichiers nécessite Cloudflare R2 en production. 
+            En développement local, vous pouvez ajouter manuellement les images dans <code>/public/static/images/uploads/</code>
+          </p>
+          <form method="POST" action="/admin/media/upload" enctype="multipart/form-data">
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Titre de la photo</label>
+              <input 
+                type="text" 
+                name="title" 
+                class="form-input"
+                placeholder="Ex: Voyage en Italie"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;"
+              />
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Fichier image *</label>
+              <input 
+                type="file" 
+                name="image" 
+                accept="image/*"
+                required
+                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;"
+              />
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-upload"></i> Uploader
+            </button>
+          </form>
+        </div>
+        
+        <h2 style="margin-bottom: 1.5rem;">Photos uploadées ({photos.results.length})</h2>
+        
+        {photos.results.length === 0 ? (
+          <div style="text-align: center; padding: 3rem; background: white; border-radius: 8px;">
+            <i class="fas fa-images" style="font-size: 4rem; color: var(--color-text-secondary); margin-bottom: 1rem;"></i>
+            <p style="font-size: 1.2rem; color: var(--color-text-secondary);">Aucune photo pour le moment</p>
+          </div>
+        ) : (
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem;">
+            {photos.results.map((photo: any) => (
+              <div style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+                <div style="aspect-ratio: 4/3; background: #f5f5f5; position: relative; overflow: hidden;">
+                  <img 
+                    src={photo.url} 
+                    alt={photo.title || 'Photo'} 
+                    style="width: 100%; height: 100%; object-fit: cover;"
+                  />
+                </div>
+                <div style="padding: 1rem;">
+                  {photo.title && (
+                    <h3 style="margin-bottom: 0.5rem; font-size: 1rem;">{photo.title}</h3>
+                  )}
+                  <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 0.5rem;">
+                    {new Date(photo.created_at).toLocaleDateString('fr-FR')}                    
+                  </p>
+                  <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                    <input 
+                      type="text" 
+                      value={photo.url}
+                      readonly
+                      onclick="this.select()"
+                      style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem; font-family: monospace;"
+                    />
+                    <button 
+                      onclick="navigator.clipboard.writeText('{photo.url}'); alert('URL copiée !')"
+                      style="padding: 0.5rem; background: var(--color-primary); color: white; border: none; border-radius: 4px; cursor: pointer;"
+                      title="Copier l'URL"
+                    >
+                      <i class="fas fa-copy"></i>
+                    </button>
+                  </div>
+                  <form method="POST" action={`/admin/media/${photo.id}/delete`} onsubmit="return confirm('Supprimer cette photo ?')">
+                    <button 
+                      type="submit"
+                      style="width: 100%; padding: 0.5rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;"
+                    >
+                      <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>,
+    { title: 'Gestion des Photos - Admin' }
+  )
+})
+
+// Traiter l'upload de photo
+app.post('/admin/media/upload', async (c) => {
+  try {
+    const body = await c.req.parseBody()
+    const title = (body.title as string) || ''
+    const file = body.image as File
+    
+    if (!file) {
+      throw new Error('Aucun fichier sélectionné')
+    }
+    
+    // Générer un nom de fichier unique
+    const timestamp = Date.now()
+    const extension = file.name.split('.').pop()
+    const filename = `${timestamp}.${extension}`
+    
+    // Pour le développement local avec Vite, on simule l'upload
+    // En production, vous devrez utiliser Cloudflare R2
+    const url = `/static/images/uploads/${filename}`
+    
+    // Enregistrer dans la DB
+    await c.env.db
+      .prepare('INSERT INTO photos (url, caption) VALUES (?, ?)')
+      .bind(url, title)
+      .run()
+    
+    // Note : Le fichier réel n'est pas sauvegardé en dev local
+    // Vous devrez le faire manuellement ou configurer R2 pour la production
+    
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: orange; padding: 1rem; background: #fff3cd; border-radius: 4px; margin-bottom: 1rem;">
+            ⚠️ Photo enregistrée dans la base de données !
+            <br /><br />
+            <strong>Note :</strong> En développement local, vous devez copier manuellement l'image dans :
+            <br />
+            <code>/public/static/images/uploads/{filename}</code>
+          </div>
+          <a href="/admin/media" class="btn btn-primary">Retour à la galerie</a>
+        </div>
+      </>,
+      { title: 'Upload - Admin' }
+    )
+  } catch (error) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Erreur : {error.message}
+          </div>
+          <a href="/admin/media" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+
+// Supprimer une photo
+app.post('/admin/media/:id/delete', async (c) => {
+  const id = c.req.param('id')
+  
+  try {
+    await c.env.db
+      .prepare('DELETE FROM photos WHERE id = ?')
+      .bind(id)
+      .run()
+    
+    return c.redirect('/admin/media')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
+          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
+            ❌ Erreur : {error.message}
+          </div>
+          <a href="/admin/media" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
 
 
 // Déconnexion
