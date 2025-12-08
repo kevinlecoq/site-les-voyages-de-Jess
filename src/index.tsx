@@ -55,11 +55,48 @@ app.use('/static/*', serveStatic({ root: './public' }))
 app.use('*', jsxRenderer(({ children, title }) => {
   return (
     <html lang="fr">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{title || 'Les Voyages de Jess - Travel Planner au Québec'}</title>
-        <meta name="description" content="Créatrice de voyages sur mesure. Planification personnalisée de vos aventures selon vos envies, votre rythme et votre budget." />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  {/* SEO */}
+  <title>Les Voyages de Jess | Planificatrice de Voyages Personnalisés au Québec</title>
+  <meta name="description" content="Planification de voyages sur mesure par Jessica, experte en destinations Europe, Asie et Amériques. Créez votre voyage de rêve avec une professionnelle passionnée." />
+  <meta name="keywords" content="travel planner québec, planificateur voyage, voyage sur mesure, agence voyage, jessica voyage" />
+  
+  {/* Open Graph (Facebook, LinkedIn) */}
+  <meta property="og:title" content="Les Voyages de Jess | Planificatrice de Voyages" />
+  <meta property="og:description" content="Planification de voyages sur mesure par Jessica. Europe, Asie, Amériques. Créez votre voyage de rêve." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://lesvoyagesdejess.ca" />
+  <meta property="og:image" content="https://lesvoyagesdejess.ca/static/images/hero-background.jpg" />
+  
+  {/* Twitter Card */}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Les Voyages de Jess | Planificatrice de Voyages" />
+  <meta name="twitter:description" content="Planification de voyages sur mesure par Jessica" />
+  <meta name="twitter:image" content="https://lesvoyagesdejess.ca/static/images/hero-background.jpg" />
+  
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <script type="application/ld+json">
+  {JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "TravelAgency",
+    "name": "Les Voyages de Jess",
+    "description": "Planification de voyages sur mesure",
+    "founder": {
+      "@type": "Person",
+      "name": "Jessica Finiel",
+      "email": "jessica.finiel@hotmail.com"
+    },
+    "url": "https://lesvoyagesdejess.ca",
+    "sameAs": [
+      "https://www.facebook.com/lesvoyagesdejess",
+      "https://www.instagram.com/lesvoyagesdejess"
+    ]
+  })}
+  </script>
+</head>
         
         {/* Fonts Google */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
