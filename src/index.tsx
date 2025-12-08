@@ -9,6 +9,9 @@ import { setCookie, getCookie } from 'hono/cookie'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
+// Force redeploy - 8 dec 11h10
+
+
 // Types pour les bindings Cloudflare
 type Bindings = {
   db: D1Database;
@@ -96,7 +99,6 @@ app.use('*', jsxRenderer(({ children, title }) => {
     ]
   })}
   </script>
-</head>
         
         {/* Fonts Google */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
