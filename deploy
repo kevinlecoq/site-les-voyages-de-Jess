@@ -1,0 +1,7 @@
+grep -n "app.get('/qui-suis-je'" src/index.tsx
+
+grep -n "app.get('/" src/index.tsx
+
+pwd
+cd ~/Desktop/"site internet perso"/les-voyages-de-jess
+

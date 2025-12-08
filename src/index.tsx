@@ -80,7 +80,6 @@ app.use('*', jsxRenderer(({ children, title }) => {
   <meta name="twitter:description" content="Planification de voyages sur mesure par Jessica" />
   <meta name="twitter:image" content="https://lesvoyagesdejess.ca/static/images/hero-background.jpg" />
   
-  <link rel="stylesheet" href="/static/css/styles.css" />
   <script type="application/ld+json">
   {JSON.stringify({
     "@context": "https://schema.org",
@@ -388,16 +387,16 @@ app.get('/', async (c) => {
   return c.render(
     <>
     {/* Section Hero */}
-<section class="hero" style="background-image: url('/static/images/hero-background.jpg'); background-size: cover; background-position: center; position: relative;">
-  <div style="background: rgba(0,0,0,0.3); position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1;"></div>
-  <div style="position: relative; z-index: 2;">
-    <h1 class="hero-title" style="color: white; font-size: 4rem;">Les Voyages de Jess</h1>
-    <p class="hero-subtitle" style="font-size: 1.2rem; color: white; font-family: 'Alice', serif;">Créatrice de voyages sur mesure</p>
-    <p style="font-size: 1.3rem; color: white; margin-top: 1rem; font-style: italic; font-family: 'Alice', serif;">
+<section class="hero" style={{backgroundImage: "url('/static/images/hero-background.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative'}}>
+  <div style={{background: 'rgba(0,0,0,0.3)', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1}}></div>
+  <div style={{position: 'relative', zIndex: 2}}>
+    <h1 class="hero-title" style={{color: 'white', fontSize: '4rem'}}>Les Voyages de Jess</h1>
+    <p class="hero-subtitle" style={{fontSize: '1.2rem', color: 'white', fontFamily: "'Alice', serif"}}>Créatrice de voyages sur mesure</p>
+    <p style={{fontSize: '1.3rem', color: 'white', marginTop: '1rem', fontStyle: 'italic', fontFamily: "'Alice', serif"}}>
       "Trouvez votre chemin de traverse, là où commence la magie du voyage"
     </p>
-    <div style="margin-top: 2rem;">
-      <a href="/contact" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+    <div style={{marginTop: '2rem'}}>
+      <a href="/contact" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
         <i class="fas fa-compass"></i> Je crée mon voyage
       </a>
     </div>
@@ -409,13 +408,13 @@ app.get('/', async (c) => {
   <h2 class="section-title">Mes Formules de Voyage</h2>
   
   {/* Texte explicatif éditable */}
-  <div style="max-width: 800px; margin: 0 auto 3rem; text-align: center; padding: 2rem; background: var(--color-bg-warm); border-radius: var(--radius-lg);">
-    <p style="font-size: 1.1rem; line-height: 1.8; color: var(--color-text-primary);">
+  <div style={{maxWidth: '800px', margin: '0 auto 3rem', textAlign: 'center', padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)'}}>
+    <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
       {settingsMap.formules_intro || "En tant que Travel Planner, mon rôle est de concevoir votre voyage sur mesure de A à Z. Je m'occupe de créer un itinéraire personnalisé, adapté à vos envies, votre budget et votre rythme. Vous gagnez du temps et profitez de conseils d'experte pour un voyage qui vous ressemble vraiment."}
     </p>
   </div>
   
-  <p style="text-align: center; color: var(--color-text-secondary); max-width: 700px; margin: 0 auto 2rem;">
+  <p style={{textAlign: 'center', color: 'var(--color-text-secondary)', maxWidth: '700px', margin: '0 auto 2rem'}}>
     Choisissez la formule qui correspond à vos envies. Chaque voyage est unique et adapté à votre rythme.
   </p>
 
@@ -432,7 +431,7 @@ app.get('/', async (c) => {
                 <div class="package-price">
                   <div>
                     <span class="price-amount">{pkg.price_eur}€</span>
-                    <span style="color: var(--color-text-secondary);"> / </span>
+                    <span style={{color: 'var(--color-text-secondary)'}}> / </span>
                     <span class="price-amount">{pkg.price_cad}$</span>
                   </div>
                   <a href="/voyage-sur-mesure" class="btn btn-primary">Découvrir</a>
@@ -445,9 +444,9 @@ app.get('/', async (c) => {
 
       {/* Section À propos (courte) */}
       <section class="section section-warm">
-        <div style="max-width: 900px; margin: 0 auto; text-align: center;">
+        <div style={{maxWidth: '900px', margin: '0 auto', textAlign: 'center'}}>
           <h2 class="section-title">Qui suis-je?</h2>
-          <p style="font-size: 1.1rem; line-height: 1.8; color: var(--color-text-secondary); margin-bottom: 2rem;">
+          <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-secondary)', marginBottom: '2rem'}}>
             {settingsMap.about_jessica ? settingsMap.about_jessica.substring(0, 300) + '...' : 
             'Je m\'appelle Jessica, passionnée de voyages et grande amoureuse d\'aventure. Originaire du sud de la France, je vis au Québec depuis plus de 6 ans...'}
           </p>
@@ -458,12 +457,12 @@ app.get('/', async (c) => {
       </section>
 
       {/* Section CTA */}
-      <section class="section" style="text-align: center; padding: 4rem 1rem;">
-        <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">Prêt à créer votre voyage de rêve?</h2>
-        <p style="font-size: 1.2rem; color: var(--color-text-secondary); margin-bottom: 2rem;">
+      <section class="section" style={{textAlign: 'center', padding: '4rem 1rem'}}>
+        <h2 style={{fontSize: '2.5rem', marginBottom: '1rem'}}>Prêt à créer votre voyage de rêve?</h2>
+        <p style={{fontSize: '1.2rem', color: 'var(--color-text-secondary)', marginBottom: '2rem'}}>
           Contactez-moi pour une consultation gratuite
         </p>
-        <a href="/contact" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+        <a href="/contact" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
           <i class="fas fa-paper-plane"></i> Me contacter
         </a>
       </section>
@@ -586,7 +585,7 @@ app.get('/mes-formules', async (c) => {
                 <div class="package-price">
                   <div>
                     <span class="price-amount">{pkg.price_eur}€</span>
-                    <span style="color: var(--color-text-secondary);"> / </span>
+                    <span style={{color: 'var(--color-text-secondary)'}}> / </span>
                     <span class="price-amount">{pkg.price_cad}$</span>
                   </div>
                   <a href="/voyage-sur-mesure" class="btn btn-primary">Commencer</a>
@@ -689,7 +688,7 @@ app.get('/voyage-sur-mesure', (c) => {
           Remplissez le formulaire de demande et je vous recontacte rapidement pour 
           commencer à planifier votre voyage de rêve.
         </p>
-        <a href="/contact" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+        <a href="/contact" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
           <i class="fas fa-paper-plane"></i> Faire une demande
         </a>
       </section>
@@ -714,7 +713,7 @@ app.get('/destinations', (c) => {
 
       <section class="section">
         <div style="max-width: 900px; margin: 0 auto; text-align: center; padding: 2rem; background: var(--color-bg-warm); border-radius: var(--radius-lg); margin-bottom: 3rem;">
-          <p style="font-size: 1.1rem; line-height: 1.8; color: var(--color-text-primary);">
+          <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
             Je propose mes services uniquement pour les destinations que je connais, afin de vous garantir des conseils authentiques et des recommandations de confiance.
             Cela me permet de vous accompagner de manière plus juste et personnalisée.
           </p>
@@ -793,7 +792,7 @@ app.get('/destinations', (c) => {
           <p style="font-size: 1.1rem; color: var(--color-text-secondary); margin-bottom: 2rem;">
             Contactez-moi ! Je peux vous orienter vers des destinations similaires ou discuter de votre projet.
           </p>
-          <a href="/contact" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+          <a href="/contact" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
             <i class="fas fa-paper-plane"></i> Me contacter
           </a>
         </div>
@@ -867,7 +866,7 @@ app.get('/blog', async (c) => {
           <div style="text-align: center; padding: 3rem;">
             <i class="fas fa-book-open" style="font-size: 4rem; color: var(--color-text-secondary); margin-bottom: 1rem;"></i>
             <h2>Bientôt disponible</h2>
-            <p style="color: var(--color-text-secondary);">
+            <p style={{color: 'var(--color-text-secondary)'}}>
               Les premiers articles arrivent bientôt! Revenez régulièrement pour découvrir 
               mes récits de voyage et mes meilleurs conseils.
             </p>
@@ -914,7 +913,7 @@ app.get('/contact', (c) => {
         <div style="max-width: 800px; margin: 0 auto;">
           <div style="background: var(--color-bg-warm); padding: 2rem; border-radius: var(--radius-lg); margin-bottom: 2rem; text-align: center;">
             <h2 style="margin-bottom: 1rem;">Demande de devis gratuite</h2>
-            <p style="color: var(--color-text-secondary);">
+            <p style={{color: 'var(--color-text-secondary)'}}>
               Remplissez ce formulaire et je vous recontacte sous 48h pour discuter de votre projet de voyage.
             </p>
           </div>
@@ -1190,25 +1189,25 @@ app.get('/admin', (c) => {
           <a href="/admin/blog" style="display: block; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-decoration: none; color: inherit; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
             <i class="fas fa-book-open" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 1rem;"></i>
             <h3 style="margin-bottom: 0.5rem;">Gérer le Blog</h3>
-            <p style="color: var(--color-text-secondary);">Créer et modifier des articles</p>
+            <p style={{color: 'var(--color-text-secondary)'}}>Créer et modifier des articles</p>
           </a>
           
           <a href="/admin/media" style="display: block; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-decoration: none; color: inherit; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
             <i class="fas fa-images" style="font-size: 3rem; color: var(--color-secondary); margin-bottom: 1rem;"></i>
             <h3 style="margin-bottom: 0.5rem;">Gérer les Photos</h3>
-            <p style="color: var(--color-text-secondary);">Uploader et gérer les images</p>
+            <p style={{color: 'var(--color-text-secondary)'}}>Uploader et gérer les images</p>
           </a>
           
           <a href="/admin/formules" style="display: block; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-decoration: none; color: inherit; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
             <i class="fas fa-suitcase" style="font-size: 3rem; color: var(--color-accent-green); margin-bottom: 1rem;"></i>
             <h3 style="margin-bottom: 0.5rem;">Gérer les Formules</h3>
-            <p style="color: var(--color-text-secondary);">Modifier les formules de voyage</p>
+            <p style={{color: 'var(--color-text-secondary)'}}>Modifier les formules de voyage</p>
           </a>
           
           <a href="/admin/faq" style="display: block; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-decoration: none; color: inherit; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
             <i class="fas fa-question-circle" style="font-size: 3rem; color: #f39c12; margin-bottom: 1rem;"></i>
             <h3 style="margin-bottom: 0.5rem;">Gérer la FAQ</h3>
-            <p style="color: var(--color-text-secondary);">Ajouter et modifier les FAQs</p>
+            <p style={{color: 'var(--color-text-secondary)'}}>Ajouter et modifier les FAQs</p>
           </a>
         </div>
       </div>
@@ -1297,7 +1296,7 @@ app.get('/admin/profil', (c) => {
                 class="form-input"
                 style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;"
               />
-              <small style="color: var(--color-text-secondary);">Minimum 8 caractères</small>
+              <small style={{color: 'var(--color-text-secondary)'}}>Minimum 8 caractères</small>
             </div>
             
             <div class="form-group">
@@ -1570,7 +1569,7 @@ app.get('/admin/blog/new', (c) => {
               placeholder="mon-voyage-en-italie"
               style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;"
             />
-            <small style="color: var(--color-text-secondary);">L'URL de l'article : /blog/mon-voyage-en-italie</small>
+            <small style={{color: 'var(--color-text-secondary)'}}>L'URL de l'article : /blog/mon-voyage-en-italie</small>
           </div>
           
           <div class="form-group" style="margin-bottom: 1.5rem;">
