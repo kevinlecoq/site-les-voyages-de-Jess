@@ -10,5 +10,21 @@ export default defineConfig({
       adapter,
       entry: 'src/index.tsx'
     })
-  ]
+  ],
+  ssr: {
+    external: ['bcryptjs', 'jsonwebtoken', 'cookie']
+  },
+  resolve: {
+    alias: {
+      crypto: 'crypto-browserify',
+      buffer: 'buffer',
+      stream: 'stream-browserify',
+      util: 'util'
+    }
+  },
+  define: {
+    'process.env': {},
+    global: 'globalThis'
+  }
 })
+

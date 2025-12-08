@@ -1,3 +1,5 @@
+// Redéploiement forcé pour variables env
+
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { serveStatic } from 'hono/cloudflare-workers'
@@ -12,6 +14,7 @@ type Bindings = {
   db: D1Database;
   ANTHROPIC_API_KEY: string;
   JWT_SECRET: string;
+  PHOTOS_BUCKET: R2Bucket
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -2308,7 +2311,7 @@ app.get('/admin/media', async (c) => {
               <label class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Fichier image *</label>
               <input 
                 type="file" 
-                name="image" 
+                name="file" 
                 accept="image/*"
                 required
                 style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;"
@@ -2383,63 +2386,57 @@ app.get('/admin/media', async (c) => {
 
 // Traiter l'upload de photo
 app.post('/admin/media/upload', async (c) => {
+  console.log('=== DÉBUT UPLOAD ===')
+  
+  const body = await c.req.parseBody()
+  console.log('Body:', body)
+  
+  const file = body.file as File
+  console.log('File:', file)
+  
+  if (!file) {
+    console.log('❌ Aucun fichier détecté')
+    return c.redirect('/admin/media?error=no-file')
+  }
+
+  // Générer un nom de fichier unique
+  const ext = file.name.split('.').pop()
+  const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`
+  console.log('Filename généré:', filename)
+  
   try {
-    const body = await c.req.parseBody()
-    const title = (body.title as string) || ''
-    const file = body.image as File
+    console.log('Upload vers R2...')
     
-    if (!file) {
-      throw new Error('Aucun fichier sélectionné')
-    }
+    // Upload vers R2
+    const arrayBuffer = await file.arrayBuffer()
+    console.log('ArrayBuffer créé, taille:', arrayBuffer.byteLength)
     
-    // Générer un nom de fichier unique
-    const timestamp = Date.now()
-    const extension = file.name.split('.').pop()
-    const filename = `${timestamp}.${extension}`
+    await c.env.PHOTOS_BUCKET.put(filename, arrayBuffer, {
+      httpMetadata: {
+        contentType: file.type
+      }
+    })
     
-    // Pour le développement local avec Vite, on simule l'upload
-    // En production, vous devrez utiliser Cloudflare R2
-    const url = `/static/images/uploads/${filename}`
+    console.log('✅ Upload R2 réussi!')
+    
+    // URL publique
+    const publicUrl = `https://pub-d405710240234e2fa868c5dc2e1f8cdb.r2.dev/${filename}`
+    console.log('URL publique:', publicUrl)
     
     // Enregistrer dans la DB
     await c.env.db
-      .prepare('INSERT INTO photos (url, caption) VALUES (?, ?)')
-      .bind(url, title)
+      .prepare('INSERT INTO photos (url, caption, created_at) VALUES (?, ?, ?)')
+      .bind(publicUrl, file.name, new Date().toISOString())
       .run()
     
-    // Note : Le fichier réel n'est pas sauvegardé en dev local
-    // Vous devrez le faire manuellement ou configurer R2 pour la production
+    console.log('✅ Enregistré dans la DB')
     
-    return c.render(
-      <>
-        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
-          <div style="color: orange; padding: 1rem; background: #fff3cd; border-radius: 4px; margin-bottom: 1rem;">
-            ⚠️ Photo enregistrée dans la base de données !
-            <br /><br />
-            <strong>Note :</strong> En développement local, vous devez copier manuellement l'image dans :
-            <br />
-            <code>/public/static/images/uploads/{filename}</code>
-          </div>
-          <a href="/admin/media" class="btn btn-primary">Retour à la galerie</a>
-        </div>
-      </>,
-      { title: 'Upload - Admin' }
-    )
+    return c.redirect('/admin/media')
   } catch (error) {
-    return c.render(
-      <>
-        <div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: white; border-radius: 8px;">
-          <div style="color: red; padding: 1rem; background: #ffe6e6; border-radius: 4px; margin-bottom: 1rem;">
-            ❌ Erreur : {error.message}
-          </div>
-          <a href="/admin/media" class="btn btn-secondary">Retour</a>
-        </div>
-      </>,
-      { title: 'Erreur - Admin' }
-    )
+    console.error('❌ Upload error:', error)
+    return c.redirect('/admin/media?error=upload-failed')
   }
 })
-
 // Supprimer une photo
 app.post('/admin/media/:id/delete', async (c) => {
   const id = c.req.param('id')
