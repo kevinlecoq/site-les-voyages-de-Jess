@@ -13,6 +13,13 @@
 			"database_id": "9f1635bb-10ec-4a9e-acd9-754dadda2890"
 		}
 	],
+	"r2_buckets": [
+ 	 {
+   	    "binding": "PHOTOS_BUCKET",
+   	    "bucket_name": "jess-voyage-photos"
+	 }
+	]
+
 	// "vars": {
 	//   "MY_VAR": "my-variable"
 	// },

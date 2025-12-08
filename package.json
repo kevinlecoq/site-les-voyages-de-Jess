@@ -11,9 +11,13 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.70.1",
     "bcryptjs": "^3.0.3",
+    "buffer": "^6.0.3",
     "cookie": "^1.1.1",
+    "crypto-browserify": "^3.12.1",
     "hono": "^4.10.4",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "stream-browserify": "^3.0.0",
+    "util": "^0.12.5"
   },
   "devDependencies": {
     "@hono/vite-build": "^1.2.0",
