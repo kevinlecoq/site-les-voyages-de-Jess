@@ -145,7 +145,7 @@
     userInput.focus();
     
     // Optionnel : Envoyer automatiquement le message
-    sendMessage();
+    // sendMessage();
   }
   
   // Attacher les événements aux tags de destinations
