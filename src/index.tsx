@@ -54,8 +54,14 @@ app.use('/admin/*', async (c, next) => {
 // Servir les fichiers statiques
 app.use('/static/*', serveStatic({ root: './public' }))
 
-// Renderer JSX avec layout commun
-app.use('*', jsxRenderer(({ children, title }) => {
+// Renderer JSX avec layout commun (exclure les API)
+app.use('*', async (c, next) => {
+  // Skip JSX rendering pour les routes API
+  if (c.req.path.startsWith('/api/')) {
+    return next()
+  }
+  
+  return jsxRenderer(({ children, title }) => {
   return (
     <html lang="fr">
 <head>
@@ -222,7 +228,8 @@ app.use('*', jsxRenderer(({ children, title }) => {
       </body>
     </html>
   )
-}))
+})(c, next)
+})
 
 // ============================================
 // API CHATBOT
@@ -1047,7 +1054,6 @@ app.get('/api/settings', async (c) => {
   return c.json(settingsMap)
 })
 
-export default app
 
 // ============================================
 // ROUTES ADMIN - AUTHENTIFICATION
@@ -2515,3 +2521,5 @@ app.get('/admin/logout', (c) => {
 })
 
 
+
+export default app

@@ -11,6 +11,11 @@ export default defineConfig({
       entry: 'src/index.tsx'
     })
   ],
+  build: {
+    rollupOptions: {
+      external: ['bcryptjs', 'jsonwebtoken', 'cookie']
+    }
+  },
   ssr: {
     external: ['bcryptjs', 'jsonwebtoken', 'cookie']
   },
@@ -27,4 +32,3 @@ export default defineConfig({
     global: 'globalThis'
   }
 })
-
