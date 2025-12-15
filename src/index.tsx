@@ -663,7 +663,7 @@ app.get('/voyage-sur-mesure', (c) => {
     
     <div style={{display: 'grid', gap: '2.5rem'}}>
       <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start'}}>
-        <div style={{fontSize: '3rem', flexShrink: 0}}>💬</div>
+        <div style={{fontSize: '3rem', flexShrink: 0, color: 'var(--color-primary)'}}><i class="far fa-comment-dots"></i></div>
         <div>
           <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem'}}>Échange personnalisé</h3>
           <p style={{lineHeight: 1.6}}>
@@ -675,7 +675,7 @@ app.get('/voyage-sur-mesure', (c) => {
       </div>
 
       <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start'}}>
-        <div style={{fontSize: '3rem', flexShrink: 0}}>✈️</div>
+        <div style={{fontSize: '3rem', flexShrink: 0, color: 'var(--color-primary)'}}><i class="fas fa-suitcase-rolling"></i></div>
         <div>
           <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem'}}>Création sur mesure</h3>
           <p style={{lineHeight: 1.6}}>
@@ -687,7 +687,7 @@ app.get('/voyage-sur-mesure', (c) => {
       </div>
 
       <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start'}}>
-        <div style={{fontSize: '3rem', flexShrink: 0}}>📋</div>
+        <div style={{fontSize: '3rem', flexShrink: 0, color: 'var(--color-primary)'}}><i class="far fa-check-circle"></i></div>
         <div>
           <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem'}}>Votre carnet de voyage et accompagnement</h3>
           <p style={{lineHeight: 1.6}}>
