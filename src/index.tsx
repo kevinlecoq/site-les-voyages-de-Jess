@@ -603,6 +603,32 @@ app.get('/mes-formules', async (c) => {
         </div>
       </section>
 
+	<section class="section">
+        <div style={{maxWidth: '900px', margin: '0 auto', textAlign: 'center'}}>
+          <h2 class="section-title">Les petits plus sur devis</h2>
+          <p style={{fontSize: '1.1rem', color: 'var(--color-text-secondary)', marginBottom: '3rem'}}>
+            Envie d'aller plus loin ? Découvrez mes services supplémentaires pour rendre votre voyage encore plus mémorable.
+          </p>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem'}}>
+            <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+              <div style={{fontSize: '3rem', marginBottom: '1rem'}}>🐕</div>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Voyages dog-friendly</h3>
+              <p style={{lineHeight: 1.6}}>Voyagez avec votre compagnon à quatre pattes ! Je conçois des itinéraires adaptés pour que votre chien profite autant que vous de l'aventure.</p>
+            </div>
+            <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+              <div style={{fontSize: '3rem', marginBottom: '1rem'}}>🎬</div>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Montages vidéo</h3>
+              <p style={{lineHeight: 1.6}}>Immortalisez votre voyage avec un montage vidéo professionnel de vos meilleurs moments.</p>
+            </div>
+            <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+              <div style={{fontSize: '3rem', marginBottom: '1rem'}}>📸</div>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Albums photos</h3>
+              <p style={{lineHeight: 1.6}}>Création d'albums souvenirs personnalisés pour revivre vos plus belles aventures.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="section section-warm">
         <div style={{maxWidth: '800px', margin: '0 auto', textAlign: 'center'}}>
           <h2 class="section-title">Besoin de quelque chose de différent?</h2>
@@ -627,64 +653,76 @@ app.get('/voyage-sur-mesure', (c) => {
   return c.render(
     <>
       <section class="hero">
-        <h1 class="hero-title">Votre Voyage sur Mesure</h1>
-        <p class="hero-subtitle">Comment ça marche?</p>
-      </section>
+  <h1 class="hero-title">Votre Voyage sur Mesure</h1>
+  <p class="hero-subtitle">Comment ça marche?</p>
+</section>
+
+<section class="section">
+  <div style={{maxWidth: '900px', margin: '0 auto'}}>
+    <h2 class="section-title" style={{textAlign: 'center', marginBottom: '3rem'}}>Comment ça fonctionne?</h2>
+    
+    <div style={{display: 'grid', gap: '2.5rem'}}>
+      <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start'}}>
+        <div style={{fontSize: '3rem', flexShrink: 0}}>💬</div>
+        <div>
+          <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem'}}>Échange personnalisé</h3>
+          <p style={{lineHeight: 1.6}}>
+            Tout commence par une conversation pour comprendre vos envies, votre budget, vos contraintes et vos rêves. 
+            Remplissez le formulaire de demande ou contactez-moi directement. <strong>Je vous recontacte sous 48h</strong> pour 
+            planifier notre appel découverte gratuit.
+          </p>
+        </div>
+      </div>
+
+      <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start'}}>
+        <div style={{fontSize: '3rem', flexShrink: 0}}>✈️</div>
+        <div>
+          <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem'}}>Création sur mesure</h3>
+          <p style={{lineHeight: 1.6}}>
+            Je travaille sur votre itinéraire personnalisé avec tous les détails : hébergements, transports, activités, 
+            restaurants et mes meilleurs conseils. Je vous présente ensuite votre itinéraire complet avec <strong>2 révisions incluses</strong> pour 
+            l'affiner jusqu'à ce qu'il soit parfait pour vous.
+          </p>
+        </div>
+      </div>
+
+      <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start'}}>
+        <div style={{fontSize: '3rem', flexShrink: 0}}>📋</div>
+        <div>
+          <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem'}}>Votre carnet de voyage et accompagnement</h3>
+          <p style={{lineHeight: 1.6}}>
+            Vous recevez votre <strong>carnet de voyage digital</strong> avec toutes les informations, réservations suggérées, cartes 
+            et mes recommandations personnelles. Vous partez l'esprit léger et je reste disponible pendant votre voyage 
+            si vous avez besoin de conseils ou ajustements.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
       <section class="section">
-        <div class="process-steps">
-          <div class="process-step">
-            <div class="step-number">1</div>
-            <h3 class="step-title">Premier Contact</h3>
-            <p class="step-description">
-              Remplissez le formulaire de demande ou contactez-moi directement. 
-              Je vous recontacte sous 48h pour planifier notre appel découverte gratuit.
-            </p>
-          </div>
-
-          <div class="process-step">
-            <div class="step-number">2</div>
-            <h3 class="step-title">Appel Découverte</h3>
-            <p class="step-description">
-              Nous discutons de vos envies, votre budget, vos contraintes et vos rêves. 
-              C'est le moment de tout me dire pour que je comprenne votre vision parfaitement.
-            </p>
-          </div>
-
-          <div class="process-step">
-            <div class="step-number">3</div>
-            <h3 class="step-title">Création de l'Itinéraire</h3>
-            <p class="step-description">
-              Je travaille sur votre itinéraire personnalisé avec tous les détails : 
-              hébergements, activités, restaurants, transports et mes meilleurs conseils.
-            </p>
-          </div>
-
-          <div class="process-step">
-            <div class="step-number">4</div>
-            <h3 class="step-title">Présentation & Révisions</h3>
-            <p class="step-description">
-              Je vous présente votre itinéraire complet. Vous avez droit à 2 révisions 
-              pour l'affiner jusqu'à ce qu'il soit parfait pour vous.
-            </p>
-          </div>
-
-          <div class="process-step">
-            <div class="step-number">5</div>
-            <h3 class="step-title">Carnet de Voyage</h3>
-            <p class="step-description">
-              Vous recevez votre carnet de voyage digital avec toutes les informations, 
-              réservations suggérées, cartes et mes recommandations personnelles.
-            </p>
-          </div>
-
-          <div class="process-step">
-            <div class="step-number">6</div>
-            <h3 class="step-title">Bon Voyage!</h3>
-            <p class="step-description">
-              Vous partez l'esprit léger. Je reste disponible pendant votre voyage 
-              si vous avez besoin de conseils ou ajustements.
-            </p>
+        <div style={{maxWidth: '900px', margin: '0 auto', textAlign: 'center'}}>
+          <h2 class="section-title">Les petits plus sur devis</h2>
+          <p style={{fontSize: '1.1rem', color: 'var(--color-text-secondary)', marginBottom: '3rem'}}>
+            Envie d'aller plus loin ? Découvrez mes services supplémentaires.
+          </p>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem'}}>
+            <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+              <div style={{fontSize: '3rem', marginBottom: '1rem'}}>🐕</div>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Voyages dog-friendly</h3>
+              <p style={{lineHeight: 1.6}}>Voyagez avec votre compagnon à quatre pattes ! Je conçois des itinéraires adaptés pour que votre chien profite autant que vous de l'aventure.</p>
+            </div>
+            <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+              <div style={{fontSize: '3rem', marginBottom: '1rem'}}>🎬</div>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Montages vidéo</h3>
+              <p style={{lineHeight: 1.6}}>Immortalisez votre voyage avec un montage vidéo professionnel de vos meilleurs moments.</p>
+            </div>
+            <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+              <div style={{fontSize: '3rem', marginBottom: '1rem'}}>📸</div>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Albums photos</h3>
+              <p style={{lineHeight: 1.6}}>Création d'albums souvenirs personnalisés pour revivre vos plus belles aventures.</p>
+            </div>
           </div>
         </div>
       </section>
