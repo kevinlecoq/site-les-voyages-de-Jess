@@ -1,13 +1,23 @@
+// Redéploiement forcé pour variables env
+
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { serveStatic } from 'hono/cloudflare-workers'
 import { jsxRenderer } from 'hono/jsx-renderer'
 import Anthropic from '@anthropic-ai/sdk'
+import { setCookie, getCookie } from 'hono/cookie'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+
+// Force redeploy - 8 dec 11h10
+
 
 // Types pour les bindings Cloudflare
 type Bindings = {
   db: D1Database;
   ANTHROPIC_API_KEY: string;
+  JWT_SECRET: string;
+  PHOTOS_BUCKET: R2Bucket
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -15,18 +25,85 @@ const app = new Hono<{ Bindings: Bindings }>()
 // Middleware CORS pour les API
 app.use('/api/*', cors())
 
+// Middleware de protection pour les routes admin
+app.use('/admin/*', async (c, next) => {
+  const path = new URL(c.req.url).pathname
+  
+  // Ne pas protéger la page de login
+  if (path === '/admin/login') {
+    await next()
+    return
+  }
+  
+  // Vérifier le token JWT dans le cookie
+  const token = getCookie(c, 'auth_token')
+  
+  if (!token) {
+    return c.redirect('/admin/login')
+  }
+  
+  try {
+    const decoded = jwt.verify(token, c.env.JWT_SECRET)
+    c.set('user', decoded)
+    await next()
+  } catch (error) {
+    return c.redirect('/admin/login')
+  }
+})
+
 // Servir les fichiers statiques
 app.use('/static/*', serveStatic({ root: './public' }))
 
-// Renderer JSX avec layout commun
-app.use('*', jsxRenderer(({ children, title }) => {
+// Renderer JSX avec layout commun (exclure les API)
+app.use('*', async (c, next) => {
+  // Skip JSX rendering pour les routes API
+  if (c.req.path.startsWith('/api/')) {
+    return next()
+  }
+  
+  return jsxRenderer(({ children, title }) => {
   return (
     <html lang="fr">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{title || 'Les Voyages de Jess - Travel Planner au Québec'}</title>
-        <meta name="description" content="Créatrice de voyages sur mesure. Planification personnalisée de vos aventures selon vos envies, votre rythme et votre budget." />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  {/* SEO */}
+  <title>Les Voyages de Jess | Planificatrice de Voyages Personnalisés au Québec</title>
+  <meta name="description" content="Planification de voyages sur mesure par Jessica, experte en destinations Europe, Asie et Amériques. Créez votre voyage de rêve avec une professionnelle passionnée." />
+  <meta name="keywords" content="travel planner québec, planificateur voyage, voyage sur mesure, agence voyage, jessica voyage" />
+  
+  {/* Open Graph (Facebook, LinkedIn) */}
+  <meta property="og:title" content="Les Voyages de Jess | Planificatrice de Voyages" />
+  <meta property="og:description" content="Planification de voyages sur mesure par Jessica. Europe, Asie, Amériques. Créez votre voyage de rêve." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://lesvoyagesdejess.ca" />
+  <meta property="og:image" content="https://lesvoyagesdejess.ca/static/images/hero-background.jpg" />
+  
+  {/* Twitter Card */}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Les Voyages de Jess | Planificatrice de Voyages" />
+  <meta name="twitter:description" content="Planification de voyages sur mesure par Jessica" />
+  <meta name="twitter:image" content="https://lesvoyagesdejess.ca/static/images/hero-background.jpg" />
+  
+  <script type="application/ld+json">
+  {JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "TravelAgency",
+    "name": "Les Voyages de Jess",
+    "description": "Planification de voyages sur mesure",
+    "founder": {
+      "@type": "Person",
+      "name": "Jessica Finiel",
+      "email": "jessica.finiel@hotmail.com"
+    },
+    "url": "https://lesvoyagesdejess.ca",
+    "sameAs": [
+      "https://www.facebook.com/lesvoyagesdejess",
+      "https://www.instagram.com/lesvoyagesdejess"
+    ]
+  })}
+  </script>
         
         {/* Fonts Google */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -102,6 +179,11 @@ app.use('*', jsxRenderer(({ children, title }) => {
             </div>
           </div>
           <div class="footer-bottom">
+            <div style={{textAlign: 'center', padding: '0.5rem 0', borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '1rem'}}>
+              <a href="/admin/login" style={{color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', textDecoration: 'none'}}>
+                Accès admin
+              </a>
+            </div>
             <p>&copy; {new Date().getFullYear()} Les Voyages de Jess. Tous droits réservés.</p>
           </div>
         </footer>
@@ -146,7 +228,8 @@ app.use('*', jsxRenderer(({ children, title }) => {
       </body>
     </html>
   )
-}))
+})(c, next)
+})
 
 // ============================================
 // API CHATBOT
@@ -174,8 +257,8 @@ app.post('/api/chat', async (c) => {
 
     // Envoie le message à Claude avec tout l'historique
     const response = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 1024,
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
       messages: messages,
       system: `Tu es un assistant de voyage expert pour 'Les Voyages de Jess'.
 
@@ -311,16 +394,16 @@ app.get('/', async (c) => {
   return c.render(
     <>
     {/* Section Hero */}
-<section class="hero" style="background-image: url('/static/images/hero-background.jpg'); background-size: cover; background-position: center; position: relative;">
-  <div style="background: rgba(0,0,0,0.3); position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1;"></div>
-  <div style="position: relative; z-index: 2;">
-    <h1 class="hero-title" style="color: white; font-size: 4rem;">Les Voyages de Jess</h1>
-    <p class="hero-subtitle" style="font-size: 1.2rem; color: white; font-family: 'Alice', serif;">Créatrice de voyages sur mesure</p>
-    <p style="font-size: 1.3rem; color: white; margin-top: 1rem; font-style: italic; font-family: 'Alice', serif;">
+<section class="hero" style={{backgroundImage: "url('/static/images/hero-background.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative'}}>
+  <div style={{background: 'rgba(0,0,0,0.3)', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1}}></div>
+  <div style={{position: 'relative', zIndex: 2}}>
+    <h1 class="hero-title" style={{color: 'white', fontSize: '4rem'}}>Les Voyages de Jess</h1>
+    <p class="hero-subtitle" style={{fontSize: '1.2rem', color: 'white', fontFamily: "'Alice', serif"}}>Créatrice de voyages sur mesure</p>
+    <p style={{fontSize: '1.3rem', color: 'white', marginTop: '1rem', fontStyle: 'italic', fontFamily: "'Alice', serif"}}>
       "Trouvez votre chemin de traverse, là où commence la magie du voyage"
     </p>
-    <div style="margin-top: 2rem;">
-      <a href="/contact" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+    <div style={{marginTop: '2rem'}}>
+      <a href="/contact" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
         <i class="fas fa-compass"></i> Je crée mon voyage
       </a>
     </div>
@@ -332,13 +415,13 @@ app.get('/', async (c) => {
   <h2 class="section-title">Mes Formules de Voyage</h2>
   
   {/* Texte explicatif éditable */}
-  <div style="max-width: 800px; margin: 0 auto 3rem; text-align: center; padding: 2rem; background: var(--color-bg-warm); border-radius: var(--radius-lg);">
-    <p style="font-size: 1.1rem; line-height: 1.8; color: var(--color-text-primary);">
+  <div style={{maxWidth: '800px', margin: '0 auto 3rem', textAlign: 'center', padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)'}}>
+    <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
       {settingsMap.formules_intro || "En tant que Travel Planner, mon rôle est de concevoir votre voyage sur mesure de A à Z. Je m'occupe de créer un itinéraire personnalisé, adapté à vos envies, votre budget et votre rythme. Vous gagnez du temps et profitez de conseils d'experte pour un voyage qui vous ressemble vraiment."}
     </p>
   </div>
   
-  <p style="text-align: center; color: var(--color-text-secondary); max-width: 700px; margin: 0 auto 2rem;">
+  <p style={{textAlign: 'center', color: 'var(--color-text-secondary)', maxWidth: '700px', margin: '0 auto 2rem'}}>
     Choisissez la formule qui correspond à vos envies. Chaque voyage est unique et adapté à votre rythme.
   </p>
 
@@ -355,7 +438,7 @@ app.get('/', async (c) => {
                 <div class="package-price">
                   <div>
                     <span class="price-amount">{pkg.price_eur}€</span>
-                    <span style="color: var(--color-text-secondary);"> / </span>
+                    <span style={{color: 'var(--color-text-secondary)'}}> / </span>
                     <span class="price-amount">{pkg.price_cad}$</span>
                   </div>
                   <a href="/voyage-sur-mesure" class="btn btn-primary">Découvrir</a>
@@ -368,9 +451,9 @@ app.get('/', async (c) => {
 
       {/* Section À propos (courte) */}
       <section class="section section-warm">
-        <div style="max-width: 900px; margin: 0 auto; text-align: center;">
+        <div style={{maxWidth: '900px', margin: '0 auto', textAlign: 'center'}}>
           <h2 class="section-title">Qui suis-je?</h2>
-          <p style="font-size: 1.1rem; line-height: 1.8; color: var(--color-text-secondary); margin-bottom: 2rem;">
+          <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-secondary)', marginBottom: '2rem'}}>
             {settingsMap.about_jessica ? settingsMap.about_jessica.substring(0, 300) + '...' : 
             'Je m\'appelle Jessica, passionnée de voyages et grande amoureuse d\'aventure. Originaire du sud de la France, je vis au Québec depuis plus de 6 ans...'}
           </p>
@@ -381,12 +464,12 @@ app.get('/', async (c) => {
       </section>
 
       {/* Section CTA */}
-      <section class="section" style="text-align: center; padding: 4rem 1rem;">
-        <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">Prêt à créer votre voyage de rêve?</h2>
-        <p style="font-size: 1.2rem; color: var(--color-text-secondary); margin-bottom: 2rem;">
+      <section class="section" style={{textAlign: 'center', padding: '4rem 1rem'}}>
+        <h2 style={{fontSize: '2.5rem', marginBottom: '1rem'}}>Prêt à créer votre voyage de rêve?</h2>
+        <p style={{fontSize: '1.2rem', color: 'var(--color-text-secondary)', marginBottom: '2rem'}}>
           Contactez-moi pour une consultation gratuite
         </p>
-        <a href="/contact" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+        <a href="/contact" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
           <i class="fas fa-paper-plane"></i> Me contacter
         </a>
       </section>
@@ -420,30 +503,30 @@ app.get('/qui-suis-je', async (c) => {
                  class="about-image" />
           </div>
           <div class="about-content">
-            <h2 style="margin-bottom: 1.5rem;">Bienvenue dans mon univers</h2>
+            <h2 style={{marginBottom: '1.5rem'}}>Bienvenue dans mon univers</h2>
             {settingsMap.about_jessica && settingsMap.about_jessica.split('\n\n').map((paragraph: string) => (
-              <p style="margin-bottom: 1rem; line-height: 1.8;">{paragraph}</p>
+              <p style={{marginBottom: '1rem', lineHeight: 1.8}}>{paragraph}</p>
             ))}
           </div>
         </div>
       </section>
 
       <section class="section section-warm">
-        <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+        <div style={{maxWidth: '800px', margin: '0 auto', textAlign: 'center'}}>
           <h2 class="section-title">Pourquoi choisir un Travel Planner?</h2>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 2rem;">
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginTop: '2rem'}}>
             <div>
-              <i class="fas fa-heart" style="font-size: 3rem; color: var(--color-secondary); margin-bottom: 1rem;"></i>
+              <i class="fas fa-heart" style={{fontSize: '3rem', color: 'var(--color-secondary)', marginBottom: '1rem'}}></i>
               <h3>Personnalisé</h3>
               <p>Un voyage qui vous ressemble vraiment</p>
             </div>
             <div>
-              <i class="fas fa-clock" style="font-size: 3rem; color: var(--color-secondary); margin-bottom: 1rem;"></i>
+              <i class="fas fa-clock" style={{fontSize: '3rem', color: 'var(--color-secondary)', marginBottom: '1rem'}}></i>
               <h3>Gain de temps</h3>
               <p>Je m'occupe de tout pour vous</p>
             </div>
             <div>
-              <i class="fas fa-map-marked-alt" style="font-size: 3rem; color: var(--color-secondary); margin-bottom: 1rem;"></i>
+              <i class="fas fa-map-marked-alt" style={{fontSize: '3rem', color: 'var(--color-secondary)', marginBottom: '1rem'}}></i>
               <h3>Expertise</h3>
               <p>Des conseils basés sur mes expériences</p>
             </div>
@@ -469,6 +552,24 @@ app.get('/mes-formules', async (c) => {
       </section>
 
       <section class="section">
+        <div style={{maxWidth: '900px', margin: '0 auto', textAlign: 'center', padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)', marginBottom: '3rem'}}>
+          <h2 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontFamily: '\'Brittany Signature\', cursive', fontSize: '2.5rem'}}>Mon rôle</h2>
+          <div style={{textAlign: 'left', lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
+            <p style={{marginBottom: '1rem'}}>
+              Mon rôle, c'est de transformer vos idées d'évasion en un voyage concret, fluide et surtout à votre image.
+            </p>
+            <p style={{marginBottom: '1rem'}}>
+              Ensemble, nous créons l'itinéraire parfait pour vous, selon vos envies, vos priorités et votre budget. Je conçois des voyages sur mesure, pensés dans les moindres détails : des lieux à découvrir, des hébergements à essayer, des activités à vivre, et des moments à savourer.
+            </p>
+            <p>
+              Je vous offre une vision claire, personnalisée et inspirante pour que votre voyage se déroule sans stress tout en vous laissant la liberté de réserver et de le vivre à votre rythme.
+            </p>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="section">
         <div class="packages-grid">
           {packages.results.map((pkg: any) => (
             <div class="package-card">
@@ -477,21 +578,21 @@ app.get('/mes-formules', async (c) => {
                 <h3 class="package-name">{pkg.name}</h3>
                 <p class="package-duration"><i class="fas fa-clock"></i> {pkg.duration}</p>
                 <p class="package-description">{pkg.description}</p>
-                <div style="margin: 1.5rem 0;">
-                  <h4 style="color: var(--color-primary); margin-bottom: 0.5rem;">Ce qui est inclus :</h4>
-                  <ul style="list-style: none; padding: 0;">
-                    <li><i class="fas fa-check" style="color: var(--color-accent-green);"></i> Appel découverte</li>
-                    <li><i class="fas fa-check" style="color: var(--color-accent-green);"></i> Itinéraire détaillé personnalisé</li>
-                    <li><i class="fas fa-check" style="color: var(--color-accent-green);"></i> Recommandations d'hébergements</li>
-                    <li><i class="fas fa-check" style="color: var(--color-accent-green);"></i> Suggestions d'activités</li>
-                    <li><i class="fas fa-check" style="color: var(--color-accent-green);"></i> Carnet de voyage digital</li>
-                    <li><i class="fas fa-check" style="color: var(--color-accent-green);"></i> 2 révisions incluses</li>
+                <div style={{margin: '1.5rem 0'}}>
+                  <h4 style={{color: 'var(--color-primary)', marginBottom: '0.5rem'}}>Ce qui est inclus :</h4>
+                  <ul style={{listStyle: 'none', padding: 0}}>
+                    <li><i class="fas fa-check" style={{color: 'var(--color-accent-green)'}}></i> Appel découverte</li>
+                    <li><i class="fas fa-check" style={{color: 'var(--color-accent-green)'}}></i> Itinéraire détaillé personnalisé</li>
+                    <li><i class="fas fa-check" style={{color: 'var(--color-accent-green)'}}></i> Recommandations d'hébergements</li>
+                    <li><i class="fas fa-check" style={{color: 'var(--color-accent-green)'}}></i> Suggestions d'activités</li>
+                    <li><i class="fas fa-check" style={{color: 'var(--color-accent-green)'}}></i> Carnet de voyage digital</li>
+                    <li><i class="fas fa-check" style={{color: 'var(--color-accent-green)'}}></i> 2 révisions incluses</li>
                   </ul>
                 </div>
                 <div class="package-price">
                   <div>
                     <span class="price-amount">{pkg.price_eur}€</span>
-                    <span style="color: var(--color-text-secondary);"> / </span>
+                    <span style={{color: 'var(--color-text-secondary)'}}> / </span>
                     <span class="price-amount">{pkg.price_cad}$</span>
                   </div>
                   <a href="/voyage-sur-mesure" class="btn btn-primary">Commencer</a>
@@ -502,10 +603,36 @@ app.get('/mes-formules', async (c) => {
         </div>
       </section>
 
+	<section class="section">
+        <div style={{maxWidth: '900px', margin: '0 auto', textAlign: 'center'}}>
+          <h2 class="section-title">Les petits plus sur devis</h2>
+          <p style={{fontSize: '1.1rem', color: 'var(--color-text-secondary)', marginBottom: '3rem'}}>
+            Envie d'aller plus loin ? Découvrez mes services supplémentaires pour rendre votre voyage encore plus mémorable.
+          </p>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem'}}>
+            <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+              <div style={{fontSize: '3rem', marginBottom: '1rem'}}>🐕</div>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Voyages dog-friendly</h3>
+              <p style={{lineHeight: 1.6}}>Voyagez avec votre compagnon à quatre pattes ! Je conçois des itinéraires adaptés pour que votre chien profite autant que vous de l'aventure.</p>
+            </div>
+            <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+              <div style={{fontSize: '3rem', marginBottom: '1rem'}}>🎬</div>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Montages vidéo</h3>
+              <p style={{lineHeight: 1.6}}>Immortalisez votre voyage avec un montage vidéo professionnel de vos meilleurs moments.</p>
+            </div>
+            <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+              <div style={{fontSize: '3rem', marginBottom: '1rem'}}>📸</div>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Albums photos</h3>
+              <p style={{lineHeight: 1.6}}>Création d'albums souvenirs personnalisés pour revivre vos plus belles aventures.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="section section-warm">
-        <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+        <div style={{maxWidth: '800px', margin: '0 auto', textAlign: 'center'}}>
           <h2 class="section-title">Besoin de quelque chose de différent?</h2>
-          <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+          <p style={{fontSize: '1.1rem', marginBottom: '2rem'}}>
             Chaque voyage est unique. Si aucune formule ne correspond exactement à vos besoins,
             contactez-moi pour un devis personnalisé.
           </p>
@@ -526,75 +653,87 @@ app.get('/voyage-sur-mesure', (c) => {
   return c.render(
     <>
       <section class="hero">
-        <h1 class="hero-title">Votre Voyage sur Mesure</h1>
-        <p class="hero-subtitle">Comment ça marche?</p>
-      </section>
+  <h1 class="hero-title">Votre Voyage sur Mesure</h1>
+  <p class="hero-subtitle">Comment ça marche?</p>
+</section>
+
+<section class="section">
+  <div style={{maxWidth: '900px', margin: '0 auto'}}>
+    <h2 class="section-title" style={{textAlign: 'center', marginBottom: '3rem'}}>Comment ça fonctionne?</h2>
+    
+    <div style={{display: 'grid', gap: '2.5rem'}}>
+      <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start'}}>
+        <div style={{fontSize: '3rem', flexShrink: 0, color: 'var(--color-primary)'}}><i class="far fa-comment-dots"></i></div>
+        <div>
+          <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem'}}>Échange personnalisé</h3>
+          <p style={{lineHeight: 1.6}}>
+            Tout commence par une conversation pour comprendre vos envies, votre budget, vos contraintes et vos rêves. 
+            Remplissez le formulaire de demande ou contactez-moi directement. <strong>Je vous recontacte sous 48h</strong> pour 
+            planifier notre appel découverte gratuit.
+          </p>
+        </div>
+      </div>
+
+      <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start'}}>
+        <div style={{fontSize: '3rem', flexShrink: 0, color: 'var(--color-primary)'}}><i class="fas fa-suitcase-rolling"></i></div>
+        <div>
+          <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem'}}>Création sur mesure</h3>
+          <p style={{lineHeight: 1.6}}>
+            Je travaille sur votre itinéraire personnalisé avec tous les détails : hébergements, transports, activités, 
+            restaurants et mes meilleurs conseils. Je vous présente ensuite votre itinéraire complet avec <strong>2 révisions incluses</strong> pour 
+            l'affiner jusqu'à ce qu'il soit parfait pour vous.
+          </p>
+        </div>
+      </div>
+
+      <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start'}}>
+        <div style={{fontSize: '3rem', flexShrink: 0, color: 'var(--color-primary)'}}><i class="far fa-check-circle"></i></div>
+        <div>
+          <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem'}}>Votre carnet de voyage et accompagnement</h3>
+          <p style={{lineHeight: 1.6}}>
+            Vous recevez votre <strong>carnet de voyage digital</strong> avec toutes les informations, réservations suggérées, cartes 
+            et mes recommandations personnelles. Vous partez l'esprit léger et je reste disponible pendant votre voyage 
+            si vous avez besoin de conseils ou ajustements.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
       <section class="section">
-        <div class="process-steps">
-          <div class="process-step">
-            <div class="step-number">1</div>
-            <h3 class="step-title">Premier Contact</h3>
-            <p class="step-description">
-              Remplissez le formulaire de demande ou contactez-moi directement. 
-              Je vous recontacte sous 48h pour planifier notre appel découverte gratuit.
-            </p>
-          </div>
-
-          <div class="process-step">
-            <div class="step-number">2</div>
-            <h3 class="step-title">Appel Découverte</h3>
-            <p class="step-description">
-              Nous discutons de vos envies, votre budget, vos contraintes et vos rêves. 
-              C'est le moment de tout me dire pour que je comprenne votre vision parfaitement.
-            </p>
-          </div>
-
-          <div class="process-step">
-            <div class="step-number">3</div>
-            <h3 class="step-title">Création de l'Itinéraire</h3>
-            <p class="step-description">
-              Je travaille sur votre itinéraire personnalisé avec tous les détails : 
-              hébergements, activités, restaurants, transports et mes meilleurs conseils.
-            </p>
-          </div>
-
-          <div class="process-step">
-            <div class="step-number">4</div>
-            <h3 class="step-title">Présentation & Révisions</h3>
-            <p class="step-description">
-              Je vous présente votre itinéraire complet. Vous avez droit à 2 révisions 
-              pour l'affiner jusqu'à ce qu'il soit parfait pour vous.
-            </p>
-          </div>
-
-          <div class="process-step">
-            <div class="step-number">5</div>
-            <h3 class="step-title">Carnet de Voyage</h3>
-            <p class="step-description">
-              Vous recevez votre carnet de voyage digital avec toutes les informations, 
-              réservations suggérées, cartes et mes recommandations personnelles.
-            </p>
-          </div>
-
-          <div class="process-step">
-            <div class="step-number">6</div>
-            <h3 class="step-title">Bon Voyage!</h3>
-            <p class="step-description">
-              Vous partez l'esprit léger. Je reste disponible pendant votre voyage 
-              si vous avez besoin de conseils ou ajustements.
-            </p>
+        <div style={{maxWidth: '900px', margin: '0 auto', textAlign: 'center'}}>
+          <h2 class="section-title">Les petits plus sur devis</h2>
+          <p style={{fontSize: '1.1rem', color: 'var(--color-text-secondary)', marginBottom: '3rem'}}>
+            Envie d'aller plus loin ? Découvrez mes services supplémentaires.
+          </p>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem'}}>
+            <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+              <div style={{fontSize: '3rem', marginBottom: '1rem'}}>🐕</div>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Voyages dog-friendly</h3>
+              <p style={{lineHeight: 1.6}}>Voyagez avec votre compagnon à quatre pattes ! Je conçois des itinéraires adaptés pour que votre chien profite autant que vous de l'aventure.</p>
+            </div>
+            <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+              <div style={{fontSize: '3rem', marginBottom: '1rem'}}>🎬</div>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Montages vidéo</h3>
+              <p style={{lineHeight: 1.6}}>Immortalisez votre voyage avec un montage vidéo professionnel de vos meilleurs moments.</p>
+            </div>
+            <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+              <div style={{fontSize: '3rem', marginBottom: '1rem'}}>📸</div>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Albums photos</h3>
+              <p style={{lineHeight: 1.6}}>Création d'albums souvenirs personnalisés pour revivre vos plus belles aventures.</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="section section-warm" style="text-align: center;">
+      <section class="section section-warm" style={{textAlign: 'center'}}>
         <h2 class="section-title">Prêt à commencer?</h2>
-        <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto 2rem;">
+        <p style={{fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto 2rem'}}>
           Remplissez le formulaire de demande et je vous recontacte rapidement pour 
           commencer à planifier votre voyage de rêve.
         </p>
-        <a href="/contact" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+        <a href="/contact" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
           <i class="fas fa-paper-plane"></i> Faire une demande
         </a>
       </section>
@@ -618,8 +757,8 @@ app.get('/destinations', (c) => {
       </section>
 
       <section class="section">
-        <div style="max-width: 900px; margin: 0 auto; text-align: center; padding: 2rem; background: var(--color-bg-warm); border-radius: var(--radius-lg); margin-bottom: 3rem;">
-          <p style="font-size: 1.1rem; line-height: 1.8; color: var(--color-text-primary);">
+        <div style={{maxWidth: '900px', margin: '0 auto', textAlign: 'center', padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)', marginBottom: '3rem'}}>
+          <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
             Je propose mes services uniquement pour les destinations que je connais, afin de vous garantir des conseils authentiques et des recommandations de confiance.
             Cela me permet de vous accompagner de manière plus juste et personnalisée.
           </p>
@@ -693,12 +832,12 @@ app.get('/destinations', (c) => {
           </div>
         </div>
 
-        <div style="text-align: center; margin-top: 3rem; padding: 2rem;">
-          <h3 style="margin-bottom: 1rem;">Votre destination ne figure pas dans cette liste ?</h3>
-          <p style="font-size: 1.1rem; color: var(--color-text-secondary); margin-bottom: 2rem;">
+        <div style={{textAlign: 'center', marginTop: '3rem', padding: '2rem'}}>
+          <h3 style={{marginBottom: '1rem'}}>Votre destination ne figure pas dans cette liste ?</h3>
+          <p style={{fontSize: '1.1rem', color: 'var(--color-text-secondary)', marginBottom: '2rem'}}>
             Contactez-moi ! Je peux vous orienter vers des destinations similaires ou discuter de votre projet.
           </p>
-          <a href="/contact" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+          <a href="/contact" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
             <i class="fas fa-paper-plane"></i> Me contacter
           </a>
         </div>
@@ -739,9 +878,9 @@ app.get('/faq', async (c) => {
           ))}
         </div>
 
-        <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--color-bg-warm); border-radius: var(--radius-lg);">
-          <h3 style="margin-bottom: 1rem;">Vous ne trouvez pas votre réponse?</h3>
-          <p style="margin-bottom: 1.5rem; color: var(--color-text-secondary);">
+        <div style={{textAlign: 'center', marginTop: '3rem', padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)'}}>
+          <h3 style={{marginBottom: '1rem'}}>Vous ne trouvez pas votre réponse?</h3>
+          <p style={{marginBottom: '1.5rem', color: 'var(--color-text-secondary)'}}>
             N'hésitez pas à me contacter directement, je serai ravie de répondre à toutes vos questions!
           </p>
           <a href="/contact" class="btn btn-primary">
@@ -769,10 +908,10 @@ app.get('/blog', async (c) => {
 
       <section class="section">
         {posts.results.length === 0 ? (
-          <div style="text-align: center; padding: 3rem;">
-            <i class="fas fa-book-open" style="font-size: 4rem; color: var(--color-text-secondary); margin-bottom: 1rem;"></i>
+          <div style={{textAlign: 'center', padding: '3rem'}}>
+            <i class="fas fa-book-open" style={{fontSize: '4rem', color: 'var(--color-text-secondary)', marginBottom: '1rem'}}></i>
             <h2>Bientôt disponible</h2>
-            <p style="color: var(--color-text-secondary);">
+            <p style={{color: 'var(--color-text-secondary)'}}>
               Les premiers articles arrivent bientôt! Revenez régulièrement pour découvrir 
               mes récits de voyage et mes meilleurs conseils.
             </p>
@@ -816,15 +955,15 @@ app.get('/contact', (c) => {
       </section>
 
       <section class="section">
-        <div style="max-width: 800px; margin: 0 auto;">
-          <div style="background: var(--color-bg-warm); padding: 2rem; border-radius: var(--radius-lg); margin-bottom: 2rem; text-align: center;">
-            <h2 style="margin-bottom: 1rem;">Demande de devis gratuite</h2>
-            <p style="color: var(--color-text-secondary);">
+        <div style={{maxWidth: '800px', margin: '0 auto'}}>
+          <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', marginBottom: '2rem', textAlign: 'center'}}>
+            <h2 style={{marginBottom: '1rem'}}>Demande de devis gratuite</h2>
+            <p style={{color: 'var(--color-text-secondary)'}}>
               Remplissez ce formulaire et je vous recontacte sous 48h pour discuter de votre projet de voyage.
             </p>
           </div>
 
-          <form id="quote-form" style="background: white; padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+          <form id="quote-form" style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)'}}>
             <div class="form-group">
               <label class="form-label" for="name">Nom complet *</label>
               <input type="text" id="name" name="name" class="form-input" required />
@@ -845,7 +984,7 @@ app.get('/contact', (c) => {
               <input type="text" id="destination" name="destination" class="form-input" placeholder="Ex: Japon, Italie, Amérique du Sud..." required />
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
               <div class="form-group">
                 <label class="form-label" for="duration">Durée du voyage *</label>
                 <select id="duration" name="duration" class="form-select" required>
@@ -881,22 +1020,22 @@ app.get('/contact', (c) => {
                         required></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">
+            <button type="submit" class="btn btn-primary" style={{width: '100%', padding: '1rem', fontSize: '1.1rem'}}>
               <i class="fas fa-paper-plane"></i> Envoyer ma demande
             </button>
           </form>
 
-          <div style="margin-top: 2rem; text-align: center; padding: 2rem;">
-            <h3 style="margin-bottom: 1rem;">Ou contactez-moi directement :</h3>
-            <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">
-              <i class="fas fa-envelope" style="color: var(--color-primary);"></i> 
-              <a href="mailto:contact@lesvoyagesdejess.ca" style="color: var(--color-primary); text-decoration: none;">
+          <div style={{marginTop: '2rem', textAlign: 'center', padding: '2rem'}}>
+            <h3 style={{marginBottom: '1rem'}}>Ou contactez-moi directement :</h3>
+            <p style={{fontSize: '1.1rem', marginBottom: '0.5rem'}}>
+              <i class="fas fa-envelope" style={{color: 'var(--color-primary)'}}></i> 
+              <a href="mailto:contact@lesvoyagesdejess.ca" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
                 contact@lesvoyagesdejess.ca
               </a>
             </p>
-            <p style="font-size: 1.1rem;">
-              <i class="fab fa-instagram" style="color: var(--color-secondary);"></i> 
-              <a href="https://instagram.com/lesvoyagesdejess" target="_blank" style="color: var(--color-secondary); text-decoration: none;">
+            <p style={{fontSize: '1.1rem'}}>
+              <i class="fab fa-instagram" style={{color: 'var(--color-secondary)'}}></i> 
+              <a href="https://instagram.com/lesvoyagesdejess" target="_blank" style={{color: 'var(--color-secondary)', textDecoration: 'none'}}>
                 @lesvoyagesdejess
               </a>
             </p>
@@ -952,5 +1091,1473 @@ app.get('/api/settings', async (c) => {
   }, {});
   return c.json(settingsMap)
 })
+
+
+// ============================================
+// ROUTES ADMIN - AUTHENTIFICATION
+// ============================================
+
+// Page de connexion admin
+app.get('/admin/login', (c) => {
+  return c.render(
+    <>
+      <div style={{maxWidth: '400px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
+        <h1 style={{textAlign: 'center', marginBottom: '2rem', color: 'var(--color-primary)'}}>Connexion Admin</h1>
+        
+        <form method="POST" action="/admin/login">
+          <div style={{marginBottom: '1rem'}}>
+            <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Email</label>
+            <input 
+              type="email" 
+              name="email" 
+              required 
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px'}}
+            />
+          </div>
+          
+          <div style={{marginBottom: '1.5rem'}}>
+            <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Mot de passe</label>
+            <input 
+              type="password" 
+              name="password" 
+              required 
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px'}}
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            style={{width: '100%', padding: '0.75rem', fontSize: '1rem'}}
+          >
+            Se connecter
+          </button>
+        </form>
+      </div>
+    </>,
+    { title: 'Connexion Admin - Les Voyages de Jess' }
+  )
+})
+
+// Traitement de la connexion
+app.post('/admin/login', async (c) => {
+  const body = await c.req.parseBody()
+  const email = body.email as string
+  const password = body.password as string  
+  console.log('=== DEBUG LOGIN ===')
+  console.log('Email saisi:', email)
+  console.log('Password saisi:', password)
+  
+  // Chercher l'utilisateur dans la DB
+  const user = await c.env.db
+    .prepare('SELECT * FROM admin_users WHERE email = ?')
+    .bind(email)
+    .first()
+
+  console.log('User trouvé:', user)  
+  
+  if (!user) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '400px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
+          <div style={{color: 'red', textAlign: 'center', marginBottom: '1rem', padding: '1rem', background: '#ffe6e6', borderRadius: '4px'}}>
+            ❌ Email ou mot de passe incorrect
+          </div>
+          <a href="/admin/login" class="btn btn-secondary" style={{display: 'block', textAlign: 'center'}}>Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  // Vérifier le mot de passe
+  const isPasswordValid = bcrypt.compareSync(password, user.password_hash)
+  console.log('Password valid:', isPasswordValid)
+  if (!isPasswordValid) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '400px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)'}}>
+          <div style={{color: 'red', textAlign: 'center', marginBottom: '1rem', padding: '1rem', background: '#ffe6e6', borderRadius: '4px'}}>
+            ❌ Email ou mot de passe incorrect
+          </div>
+          <a href="/admin/login" class="btn btn-secondary" style={{display: 'block', textAlign: 'center'}}>Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  // Créer le token JWT
+  const token = jwt.sign(
+    { userId: user.id, email: user.email },
+    c.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  )
+  
+  // Définir le cookie
+  setCookie(c, 'auth_token', token, {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'Lax',
+    maxAge: 604800
+  })
+  
+  return c.redirect('/admin')
+})
+
+
+// Page d'accueil admin (protégée)
+app.get('/admin', (c) => {
+  const user = c.get('user')
+  
+  return c.render(
+    <>
+      <div style={{maxWidth: '1200px', margin: '2rem auto', padding: '2rem'}}>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '2px solid var(--color-primary)'}}>
+       <h1>Panneau d'administration</h1>
+          <div>
+            <a href="/admin/profil" class="btn btn-secondary" style={{marginRight: '1rem'}}>
+              <i class="fas fa-user"></i> Mon profil
+            </a>
+            <a href="/admin/logout" class="btn btn-secondary">
+              <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </a>
+          </div>
+        </div>
+        
+        <p style={{fontSize: '1.2rem', marginBottom: '2rem'}}>
+          Bienvenue <strong>{user.email}</strong> ! 👋
+        </p>
+        
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem'}}>
+          <a href="/admin/blog" style={{display: 'block', padding: '2rem', background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textDecoration: 'none', color: 'inherit', transition: 'transform 0.2s'}} onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-book-open" style={{fontSize: '3rem', color: 'var(--color-primary)', marginBottom: '1rem'}}></i>
+            <h3 style={{marginBottom: '0.5rem'}}>Gérer le Blog</h3>
+            <p style={{color: 'var(--color-text-secondary)'}}>Créer et modifier des articles</p>
+          </a>
+          
+          <a href="/admin/media" style={{display: 'block', padding: '2rem', background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textDecoration: 'none', color: 'inherit', transition: 'transform 0.2s'}} onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-images" style={{fontSize: '3rem', color: 'var(--color-secondary)', marginBottom: '1rem'}}></i>
+            <h3 style={{marginBottom: '0.5rem'}}>Gérer les Photos</h3>
+            <p style={{color: 'var(--color-text-secondary)'}}>Uploader et gérer les images</p>
+          </a>
+          
+          <a href="/admin/formules" style={{display: 'block', padding: '2rem', background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textDecoration: 'none', color: 'inherit', transition: 'transform 0.2s'}} onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-suitcase" style={{fontSize: '3rem', color: 'var(--color-accent-green)', marginBottom: '1rem'}}></i>
+            <h3 style={{marginBottom: '0.5rem'}}>Gérer les Formules</h3>
+            <p style={{color: 'var(--color-text-secondary)'}}>Modifier les formules de voyage</p>
+          </a>
+          
+          <a href="/admin/faq" style={{display: 'block', padding: '2rem', background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textDecoration: 'none', color: 'inherit', transition: 'transform 0.2s'}} onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-question-circle" style={{fontSize: '3rem', color: '#f39c12', marginBottom: '1rem'}}></i>
+            <h3 style={{marginBottom: '0.5rem'}}>Gérer la FAQ</h3>
+            <p style={{color: 'var(--color-text-secondary)'}}>Ajouter et modifier les FAQs</p>
+          </a>
+        </div>
+      </div>
+    </>,
+    { title: 'Admin - Les Voyages de Jess' }
+  )
+})
+
+// Page Mon profil
+app.get('/admin/profil', (c) => {
+  const user = c.get('user')
+  
+  return c.render(
+    <>
+      <div style={{maxWidth: '800px', margin: '2rem auto', padding: '2rem'}}>
+        <div style={{marginBottom: '2rem'}}>
+          <a href="/admin" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
+            <i class="fas fa-arrow-left"></i> Retour au panneau
+          </a>
+        </div>
+        
+        <h1 style={{marginBottom: '2rem'}}>Mon profil</h1>
+        
+        <div style={{background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '2rem'}}>
+          <h2 style={{marginBottom: '1.5rem'}}>Modifier mon email</h2>
+          <form method="POST" action="/admin/profil/email">
+            <div class="form-group">
+              <label class="form-label">Email actuel</label>
+              <input 
+                type="email" 
+                value={user.email} 
+                disabled 
+                style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', background: '#f5f5f5'}}
+              />
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Nouvel email *</label>
+              <input 
+                type="email" 
+                name="new_email" 
+                required 
+                class="form-input"
+                style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px'}}
+              />
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Mot de passe actuel (pour confirmer) *</label>
+              <input 
+                type="password" 
+                name="password" 
+                required 
+                class="form-input"
+                style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px'}}
+              />
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              Modifier l'email
+            </button>
+          </form>
+        </div>
+        
+        <div style={{background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
+          <h2 style={{marginBottom: '1.5rem'}}>Modifier mon mot de passe</h2>
+          <form method="POST" action="/admin/profil/password">
+            <div class="form-group">
+              <label class="form-label">Mot de passe actuel *</label>
+              <input 
+                type="password" 
+                name="current_password" 
+                required 
+                class="form-input"
+                style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px'}}
+              />
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Nouveau mot de passe *</label>
+              <input 
+                type="password" 
+                name="new_password" 
+                required 
+                minlength="8"
+                class="form-input"
+                style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px'}}
+              />
+              <small style={{color: 'var(--color-text-secondary)'}}>Minimum 8 caractères</small>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Confirmer le nouveau mot de passe *</label>
+              <input 
+                type="password" 
+                name="confirm_password" 
+                required 
+                minlength="8"
+                class="form-input"
+                style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px'}}
+              />
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              Modifier le mot de passe
+            </button>
+          </form>
+        </div>
+      </div>
+    </>,
+    { title: 'Mon profil - Admin' }
+  )
+})
+// Modifier l'email
+app.post('/admin/profil/email', async (c) => {
+  const user = c.get('user')
+  const body = await c.req.parseBody()
+  const new_email = body.new_email as string
+  const password = body.password as string
+  
+  // Vérifier le mot de passe actuel
+  const currentUser = await c.env.db
+    .prepare('SELECT * FROM admin_users WHERE id = ?')
+    .bind(user.userId)
+    .first()
+  
+  const isPasswordValid = bcrypt.compareSync(password, currentUser.password_hash)
+  
+  if (!isPasswordValid) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Mot de passe incorrect
+          </div>
+          <a href="/admin/profil" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  // Mettre à jour l'email
+  await c.env.db
+    .prepare('UPDATE admin_users SET email = ? WHERE id = ?')
+    .bind(new_email, user.userId)
+    .run()
+  
+  // Créer un nouveau token avec le nouvel email
+  const token = jwt.sign(
+    { userId: user.userId, email: new_email },
+    c.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  )
+  
+  setCookie(c, 'auth_token', token, {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'Lax',
+    maxAge: 604800
+  })
+  
+  return c.render(
+    <>
+      <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+        <div style={{color: 'green', padding: '1rem', background: '#d4edda', borderRadius: '4px', marginBottom: '1rem'}}>
+          ✅ Email modifié avec succès !
+        </div>
+        <a href="/admin/profil" class="btn btn-primary">Retour au profil</a>
+      </div>
+    </>,
+    { title: 'Succès - Admin' }
+  )
+})
+
+// Modifier le mot de passe
+app.post('/admin/profil/password', async (c) => {
+  const user = c.get('user')
+  const body = await c.req.parseBody()
+  const current_password = body.current_password as string
+  const new_password = body.new_password as string
+  const confirm_password = body.confirm_password as string
+  
+  // Vérifier que les mots de passe correspondent
+  if (new_password !== confirm_password) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Les mots de passe ne correspondent pas
+          </div>
+          <a href="/admin/profil" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  // Vérifier le mot de passe actuel
+  const currentUser = await c.env.db
+    .prepare('SELECT * FROM admin_users WHERE id = ?')
+    .bind(user.userId)
+    .first()
+  
+  const isPasswordValid = bcrypt.compareSync(current_password, currentUser.password_hash)
+  
+  if (!isPasswordValid) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Mot de passe actuel incorrect
+          </div>
+          <a href="/admin/profil" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  // Hasher le nouveau mot de passe
+  const salt = bcrypt.genSaltSync(10)
+  const new_password_hash = bcrypt.hashSync(new_password, salt)
+  
+  // Mettre à jour le mot de passe
+  await c.env.db
+    .prepare('UPDATE admin_users SET password_hash = ? WHERE id = ?')
+    .bind(new_password_hash, user.userId)
+    .run()
+  
+  return c.render(
+    <>
+      <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+        <div style={{color: 'green', padding: '1rem', background: '#d4edda', borderRadius: '4px', marginBottom: '1rem'}}>
+          ✅ Mot de passe modifié avec succès !
+        </div>
+        <a href="/admin/profil" class="btn btn-primary">Retour au profil</a>
+      </div>
+    </>,
+    { title: 'Succès - Admin' }
+  )
+})
+// ============================================
+// ROUTES ADMIN - GESTION DU BLOG
+// ============================================
+
+// Liste des articles du blog
+app.get('/admin/blog', async (c) => {
+  const posts = await c.env.db
+    .prepare('SELECT * FROM blog_posts ORDER BY created_at DESC')
+    .all()
+  
+  return c.render(
+    <>
+      <div style={{maxWidth: '1200px', margin: '2rem auto', padding: '2rem'}}>
+        <div style={{marginBottom: '2rem'}}>
+          <a href="/admin" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
+            <i class="fas fa-arrow-left"></i> Retour au panneau
+          </a>
+        </div>
+        
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem'}}>
+          <h1>Gestion du Blog</h1>
+          <a href="/admin/blog/new" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nouvel article
+          </a>
+        </div>
+        
+        {posts.results.length === 0 ? (
+          <div style={{textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '8px'}}>
+            <i class="fas fa-book-open" style={{fontSize: '4rem', color: 'var(--color-text-secondary)', marginBottom: '1rem'}}></i>
+            <p style={{fontSize: '1.2rem', color: 'var(--color-text-secondary)'}}>Aucun article pour le moment</p>
+            <a href="/admin/blog/new" class="btn btn-primary" style={{marginTop: '1rem'}}>
+              Créer le premier article
+            </a>
+          </div>
+        ) : (
+          <div style={{background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', overflow: 'hidden'}}>
+            <table style={{width: '100%', borderCollapse: 'collapse'}}>
+              <thead>
+                <tr style={{background: '#f5f5f5', borderBottom: '2px solid #ddd'}}>
+                  <th style={{padding: '1rem', textAlign: 'left'}}>Titre</th>
+                  <th style={{padding: '1rem', textAlign: 'left'}}>Date</th>
+                  <th style={{padding: '1rem', textAlign: 'left'}}>Statut</th>
+                  <th style={{padding: '1rem', textAlign: 'right'}}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {posts.results.map((post: any) => (
+                  <tr style={{borderBottom: '1px solid #eee'}}>
+                    <td style={{padding: '1rem'}}>{post.title}</td>
+                    <td style={{padding: '1rem'}}>
+                      {new Date(post.created_at).toLocaleDateString('fr-FR')}
+                    </td>
+                    <td style={{padding: '1rem'}}>
+                      {post.published ? (
+                        <span style={{color: 'green', fontWeight: 600}}>✅ Publié</span>
+                      ) : (
+                        <span style={{color: 'orange', fontWeight: 600}}>📝 Brouillon</span>
+                      )}
+                    </td>
+                    <td style={{padding: '1rem', textAlign: 'right'}}>
+                      <a href={`/admin/blog/edit/${post.id}`} class="btn btn-secondary" style={{marginRight: '0.5rem', fontSize: '0.9rem', padding: '0.5rem 1rem'}}>
+                        <i class="fas fa-edit"></i> Modifier
+                      </a>
+                      <form method="POST" action={`/admin/blog/${post.id}/delete`} style={{display: 'inline'}}>
+                        <button 
+                          type="submit" 
+                          onclick="return confirm('Supprimer cet article ?')"
+                          style={{background: '#dc3545', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.9rem'}}
+                        >
+                          <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>,
+    { title: 'Gestion du Blog - Admin' }
+  )
+})
+// Formulaire de création d'article
+app.get('/admin/blog/new', (c) => {
+  return c.render(
+    <>
+      <div style={{maxWidth: '900px', margin: '2rem auto', padding: '2rem'}}>
+        <div style={{marginBottom: '2rem'}}>
+          <a href="/admin/blog" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+          </a>
+        </div>
+        
+        <h1 style={{marginBottom: '2rem'}}>Nouvel article</h1>
+        
+        <form method="POST" action="/admin/blog" style={{background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Titre *</label>
+            <input 
+              type="text" 
+              name="title" 
+              required 
+              class="form-input"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem'}}
+            />
+          </div>
+          
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Slug (URL) *</label>
+            <input 
+              type="text" 
+              name="slug" 
+              required 
+              class="form-input"
+              placeholder="mon-voyage-en-italie"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem'}}
+            />
+            <small style={{color: 'var(--color-text-secondary)'}}>L'URL de l'article : /blog/mon-voyage-en-italie</small>
+          </div>
+          
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Extrait</label>
+            <textarea 
+              name="excerpt" 
+              rows="3"
+              class="form-textarea"
+              placeholder="Court résumé de l'article..."
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'inherit'}}
+            ></textarea>
+          </div>
+          
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Contenu *</label>
+            <textarea 
+              name="content" 
+              rows="15"
+              required
+              class="form-textarea"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'inherit'}}
+            ></textarea>
+          </div>
+          
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label style={{display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer'}}>
+              <input type="checkbox" name="published" value="1" />
+              <span style={{fontWeight: 600}}>Publier immédiatement</span>
+            </label>
+            <small style={{color: 'var(--color-text-secondary)', display: 'block', marginTop: '0.25rem'}}>
+              Si non coché, l'article sera sauvegardé en brouillon
+            </small>
+          </div>
+          
+          <div style={{display: 'flex', gap: '1rem', marginTop: '2rem'}}>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Enregistrer l'article
+            </button>
+            <a href="/admin/blog" class="btn btn-secondary">
+              Annuler
+            </a>
+          </div>
+        </form>
+      </div>
+    </>,
+    { title: 'Nouvel article - Admin' }
+  )
+})
+// Traiter la création d'article
+app.post('/admin/blog', async (c) => {
+  const body = await c.req.parseBody()
+  
+  const title = body.title as string
+  const slug = body.slug as string
+  const excerpt = (body.excerpt as string) || ''
+  const content = body.content as string
+  const published = body.published === '1' ? 1 : 0
+  
+  try {
+    await c.env.db
+      .prepare(`
+        INSERT INTO blog_posts (title, slug, excerpt, content, published, published_at, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `)
+      .bind(
+        title,
+        slug,
+        excerpt,
+        content,
+        published,
+        published ? new Date().toISOString() : null,
+        new Date().toISOString()
+      )
+      .run()
+    
+    return c.redirect('/admin/blog')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Erreur : {error.message}
+            <br />
+            <small>Le slug existe peut-être déjà ?</small>
+          </div>
+          <a href="/admin/blog/new" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+// Formulaire de modification d'article
+app.get('/admin/blog/edit/:id', async (c) => {
+  const id = c.req.param('id')
+  
+  const post = await c.env.db
+    .prepare('SELECT * FROM blog_posts WHERE id = ?')
+    .bind(id)
+    .first()
+  
+  if (!post) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Article non trouvé
+          </div>
+          <a href="/admin/blog" class="btn btn-secondary">Retour à la liste</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  return c.render(
+    <>
+      <div style={{maxWidth: '900px', margin: '2rem auto', padding: '2rem'}}>
+        <div style={{marginBottom: '2rem'}}>
+          <a href="/admin/blog" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+          </a>
+        </div>
+        
+        <h1 style={{marginBottom: '2rem'}}>Modifier l'article</h1>
+        
+        <form method="POST" action={`/admin/blog/${id}`} style={{background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Titre *</label>
+            <input 
+              type="text" 
+              name="title" 
+              value={post.title}
+              required 
+              class="form-input"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem'}}
+            />
+          </div>
+          
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Slug (URL) *</label>
+            <input 
+              type="text" 
+              name="slug" 
+              value={post.slug}
+              required 
+              class="form-input"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem'}}
+            />
+          </div>
+          
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Extrait</label>
+            <textarea 
+              name="excerpt" 
+              rows="3"
+              class="form-textarea"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'inherit'}}
+            >{post.excerpt}</textarea>
+          </div>
+          
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Contenu *</label>
+            <textarea 
+              name="content" 
+              rows="15"
+              required
+              class="form-textarea"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'inherit'}}
+            >{post.content}</textarea>
+          </div>
+          
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label style={{display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer'}}>
+              <input type="checkbox" name="published" value="1" checked={post.published === 1} />
+              <span style={{fontWeight: 600}}>Publié</span>
+            </label>
+          </div>
+          
+          <div style={{display: 'flex', gap: '1rem', marginTop: '2rem'}}>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Enregistrer les modifications
+            </button>
+            <a href="/admin/blog" class="btn btn-secondary">
+              Annuler
+            </a>
+          </div>
+        </form>
+      </div>
+    </>,
+    { title: 'Modifier l\'article - Admin' }
+  )
+})
+// Traiter la modification d'article
+app.post('/admin/blog/:id', async (c) => {
+  const id = c.req.param('id')
+  const body = await c.req.parseBody()
+  
+  const title = body.title as string
+  const slug = body.slug as string
+  const excerpt = (body.excerpt as string) || ''
+  const content = body.content as string
+  const published = body.published === '1' ? 1 : 0
+  
+  try {
+    await c.env.db
+      .prepare(`
+        UPDATE blog_posts 
+        SET title = ?, slug = ?, excerpt = ?, content = ?, published = ?, updated_at = ?
+        WHERE id = ?
+      `)
+      .bind(title, slug, excerpt, content, published, new Date().toISOString(), id)
+      .run()
+    
+    return c.redirect('/admin/blog')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Erreur : {error.message}
+          </div>
+          <a href={`/admin/blog/edit/${id}`} class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+
+// Supprimer un article
+app.post('/admin/blog/:id/delete', async (c) => {
+  const id = c.req.param('id')
+  
+  try {
+    await c.env.db
+      .prepare('DELETE FROM blog_posts WHERE id = ?')
+      .bind(id)
+      .run()
+    
+    return c.redirect('/admin/blog')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Erreur lors de la suppression : {error.message}
+          </div>
+          <a href="/admin/blog" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+
+// ============================================
+// ROUTES ADMIN - GESTION DE LA FAQ
+// ============================================
+
+// Liste des FAQs
+app.get('/admin/faq', async (c) => {
+  const faqs = await c.env.db
+    .prepare('SELECT * FROM faqs ORDER BY sort_order ASC')
+    .all()
+  
+  return c.render(
+    <>
+      <div style={{maxWidth: '1200px', margin: '2rem auto', padding: '2rem'}}>
+        <div style={{marginBottom: '2rem'}}>
+          <a href="/admin" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
+            <i class="fas fa-arrow-left"></i> Retour au panneau
+          </a>
+        </div>
+        
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem'}}>
+          <h1>Gestion de la FAQ</h1>
+          <a href="/admin/faq/new" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nouvelle question
+          </a>
+        </div>
+        
+        {faqs.results.length === 0 ? (
+          <div style={{textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '8px'}}>
+            <i class="fas fa-question-circle" style={{fontSize: '4rem', color: 'var(--color-text-secondary)', marginBottom: '1rem'}}></i>
+            <p style={{fontSize: '1.2rem', color: 'var(--color-text-secondary)'}}>Aucune question pour le moment</p>
+            <a href="/admin/faq/new" class="btn btn-primary" style={{marginTop: '1rem'}}>
+              Créer la première question
+            </a>
+          </div>
+        ) : (
+          <div style={{background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
+            {faqs.results.map((faq: any) => (
+              <div style={{padding: '1.5rem', borderBottom: '1px solid #eee'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '1rem'}}>
+                  <div style={{flex: 1}}>
+                    <h3 style={{marginBottom: '0.5rem', color: 'var(--color-primary)'}}>{faq.question}</h3>
+                    <p style={{color: 'var(--color-text-secondary)', margin: 0}}>{faq.answer}</p>
+                  </div>
+                  <div style={{display: 'flex', gap: '0.5rem', flexShrink: 0}}>
+                    <a href={`/admin/faq/edit/${faq.id}`} class="btn btn-secondary" style={{fontSize: '0.9rem', padding: '0.5rem 1rem'}}>
+                      <i class="fas fa-edit"></i> Modifier
+                    </a>
+                    <form method="POST" action={`/admin/faq/${faq.id}/delete`} style={{display: 'inline'}}>
+                      <button 
+                        type="submit" 
+                        onclick="return confirm('Supprimer cette question ?')"
+                        style={{background: '#dc3545', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.9rem'}}
+                      >
+                        <i class="fas fa-trash"></i> Supprimer
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>,
+    { title: 'Gestion de la FAQ - Admin' }
+  )
+})
+
+// Formulaire de création de FAQ
+app.get('/admin/faq/new', (c) => {
+  return c.render(
+    <>
+      <div style={{maxWidth: '800px', margin: '2rem auto', padding: '2rem'}}>
+        <div style={{marginBottom: '2rem'}}>
+          <a href="/admin/faq" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+          </a>
+        </div>
+        
+        <h1 style={{marginBottom: '2rem'}}>Nouvelle question</h1>
+        
+        <form method="POST" action="/admin/faq" style={{background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Question *</label>
+            <input 
+              type="text" 
+              name="question" 
+              required 
+              class="form-input"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem'}}
+            />
+          </div>
+          
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Réponse *</label>
+            <textarea 
+              name="answer" 
+              rows="6"
+              required
+              class="form-textarea"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'inherit'}}
+            ></textarea>
+          </div>
+          
+          <div style={{display: 'flex', gap: '1rem', marginTop: '2rem'}}>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Enregistrer
+            </button>
+            <a href="/admin/faq" class="btn btn-secondary">
+              Annuler
+            </a>
+          </div>
+        </form>
+      </div>
+    </>,
+    { title: 'Nouvelle question - Admin' }
+  )
+})
+
+// Traiter la création de FAQ
+app.post('/admin/faq', async (c) => {
+  const body = await c.req.parseBody()
+  const question = body.question as string
+  const answer = body.answer as string
+  
+  // Trouver le prochain sort_order
+  const maxOrder = await c.env.db
+    .prepare('SELECT MAX(sort_order) as max FROM faqs')
+    .first()
+  
+  const nextOrder = (maxOrder?.max || 0) + 1
+  
+  try {
+    await c.env.db
+      .prepare('INSERT INTO faqs (question, answer, sort_order) VALUES (?, ?, ?)')
+      .bind(question, answer, nextOrder)
+      .run()
+    
+    return c.redirect('/admin/faq')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Erreur : {error.message}
+          </div>
+          <a href="/admin/faq/new" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+
+// Formulaire de modification de FAQ
+app.get('/admin/faq/edit/:id', async (c) => {
+  const id = c.req.param('id')
+  
+  const faq = await c.env.db
+    .prepare('SELECT * FROM faqs WHERE id = ?')
+    .bind(id)
+    .first()
+  
+  if (!faq) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Question non trouvée
+          </div>
+          <a href="/admin/faq" class="btn btn-secondary">Retour à la liste</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  return c.render(
+    <>
+      <div style={{maxWidth: '800px', margin: '2rem auto', padding: '2rem'}}>
+        <div style={{marginBottom: '2rem'}}>
+          <a href="/admin/faq" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+          </a>
+        </div>
+        
+        <h1 style={{marginBottom: '2rem'}}>Modifier la question</h1>
+        
+        <form method="POST" action={`/admin/faq/${id}`} style={{background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Question *</label>
+            <input 
+              type="text" 
+              name="question" 
+              value={faq.question}
+              required 
+              class="form-input"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem'}}
+            />
+          </div>
+          
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Réponse *</label>
+            <textarea 
+              name="answer" 
+              rows="6"
+              required
+              class="form-textarea"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'inherit'}}
+            >{faq.answer}</textarea>
+          </div>
+          
+          <div style={{display: 'flex', gap: '1rem', marginTop: '2rem'}}>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Enregistrer les modifications
+            </button>
+            <a href="/admin/faq" class="btn btn-secondary">
+              Annuler
+            </a>
+          </div>
+        </form>
+      </div>
+    </>,
+    { title: 'Modifier la question - Admin' }
+  )
+})
+
+// Traiter la modification de FAQ
+app.post('/admin/faq/:id', async (c) => {
+  const id = c.req.param('id')
+  const body = await c.req.parseBody()
+  const question = body.question as string
+  const answer = body.answer as string
+  
+  try {
+    await c.env.db
+      .prepare('UPDATE faqs SET question = ?, answer = ? WHERE id = ?')
+      .bind(question, answer, id)
+      .run()
+    
+    return c.redirect('/admin/faq')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Erreur : {error.message}
+          </div>
+          <a href={`/admin/faq/edit/${id}`} class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+
+// Supprimer une FAQ
+app.post('/admin/faq/:id/delete', async (c) => {
+  const id = c.req.param('id')
+  
+  try {
+    await c.env.db
+      .prepare('DELETE FROM faqs WHERE id = ?')
+      .bind(id)
+      .run()
+    
+    return c.redirect('/admin/faq')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Erreur : {error.message}
+          </div>
+          <a href="/admin/faq" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+// ============================================
+// ROUTES ADMIN - GESTION DES FORMULES
+// ============================================
+
+// Liste des formules
+app.get('/admin/formules', async (c) => {
+  const packages = await c.env.db
+    .prepare('SELECT * FROM travel_packages ORDER BY sort_order ASC')
+    .all()
+  
+  return c.render(
+    <>
+      <div style={{maxWidth: '1200px', margin: '2rem auto', padding: '2rem'}}>
+        <div style={{marginBottom: '2rem'}}>
+          <a href="/admin" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
+            <i class="fas fa-arrow-left"></i> Retour au panneau
+          </a>
+        </div>
+        
+        <h1 style={{marginBottom: '2rem'}}>Gestion des Formules</h1>
+        
+        <div style={{display: 'grid', gap: '2rem'}}>
+          {packages.results.map((pkg: any) => (
+            <div style={{background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', padding: '2rem'}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '2rem'}}>
+                <div style={{flex: 1}}>
+                  <h2 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>{pkg.name}</h2>
+                  <p style={{marginBottom: '0.5rem'}}><strong>Durée :</strong> {pkg.duration}</p>
+                  <p style={{marginBottom: '1rem'}}><strong>Description :</strong> {pkg.description}</p>
+                  <div style={{display: 'flex', gap: '2rem', marginTop: '1rem'}}>
+                    <div>
+                      <strong>Prix EUR :</strong> <span style={{fontSize: '1.2rem', color: 'var(--color-primary)'}}>{pkg.price_eur}€</span>
+                    </div>
+                    <div>
+                      <strong>Prix CAD :</strong> <span style={{fontSize: '1.2rem', color: 'var(--color-primary)'}}>{pkg.price_cad}$</span>
+                    </div>
+                  </div>
+                </div>
+                <a href={`/admin/formules/edit/${pkg.id}`} class="btn btn-primary">
+                  <i class="fas fa-edit"></i> Modifier
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>,
+    { title: 'Gestion des Formules - Admin' }
+  )
+})
+
+// Formulaire de modification de formule
+app.get('/admin/formules/edit/:id', async (c) => {
+  const id = c.req.param('id')
+  
+  const pkg = await c.env.db
+    .prepare('SELECT * FROM travel_packages WHERE id = ?')
+    .bind(id)
+    .first()
+  
+  if (!pkg) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Formule non trouvée
+          </div>
+          <a href="/admin/formules" class="btn btn-secondary">Retour à la liste</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+  
+  return c.render(
+    <>
+      <div style={{maxWidth: '800px', margin: '2rem auto', padding: '2rem'}}>
+        <div style={{marginBottom: '2rem'}}>
+          <a href="/admin/formules" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+          </a>
+        </div>
+        
+        <h1 style={{marginBottom: '2rem'}}>Modifier la formule : {pkg.name}</h1>
+        
+        <form method="POST" action={`/admin/formules/${id}`} style={{background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Nom de la formule *</label>
+            <input 
+              type="text" 
+              name="name" 
+              value={pkg.name}
+              required 
+              class="form-input"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem'}}
+            />
+          </div>
+          
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Durée *</label>
+            <input 
+              type="text" 
+              name="duration" 
+              value={pkg.duration}
+              required 
+              class="form-input"
+              placeholder="Ex: 7-14 jours"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem'}}
+            />
+          </div>
+          
+          <div class="form-group" style={{marginBottom: '1.5rem'}}>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Description *</label>
+            <textarea 
+              name="description" 
+              rows="4"
+              required
+              class="form-textarea"
+              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'inherit'}}
+            >{pkg.description}</textarea>
+          </div>
+          
+          <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem'}}>
+            <div class="form-group">
+              <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Prix EUR (€) *</label>
+              <input 
+                type="number" 
+                name="price_eur" 
+                value={pkg.price_eur}
+                required 
+                min="0"
+                step="1"
+                class="form-input"
+                style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem'}}
+              />
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Prix CAD ($) *</label>
+              <input 
+                type="number" 
+                name="price_cad" 
+                value={pkg.price_cad}
+                required 
+                min="0"
+                step="1"
+                class="form-input"
+                style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem'}}
+              />
+            </div>
+          </div>
+          
+          <div style={{display: 'flex', gap: '1rem', marginTop: '2rem'}}>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Enregistrer les modifications
+            </button>
+            <a href="/admin/formules" class="btn btn-secondary">
+              Annuler
+            </a>
+          </div>
+        </form>
+      </div>
+    </>,
+    { title: 'Modifier la formule - Admin' }
+  )
+})
+
+// Traiter la modification de formule
+app.post('/admin/formules/:id', async (c) => {
+  const id = c.req.param('id')
+  const body = await c.req.parseBody()
+  
+  const name = body.name as string
+  const duration = body.duration as string
+  const description = body.description as string
+  const price_eur = parseInt(body.price_eur as string)
+  const price_cad = parseInt(body.price_cad as string)
+  
+  try {
+    await c.env.db
+      .prepare('UPDATE travel_packages SET name = ?, duration = ?, description = ?, price_eur = ?, price_cad = ? WHERE id = ?')
+      .bind(name, duration, description, price_eur, price_cad, id)
+      .run()
+    
+    return c.redirect('/admin/formules')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Erreur : {error.message}
+          </div>
+          <a href={`/admin/formules/edit/${id}`} class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+// ============================================
+// ROUTES ADMIN - GESTION DES PHOTOS
+// ============================================
+
+// Liste et upload des photos
+app.get('/admin/media', async (c) => {
+  const photos = await c.env.db
+    .prepare('SELECT * FROM photos ORDER BY created_at DESC')
+    .all()
+  
+  return c.render(
+    <>
+      <div style={{maxWidth: '1200px', margin: '2rem auto', padding: '2rem'}}>
+        <div style={{marginBottom: '2rem'}}>
+          <a href="/admin" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
+            <i class="fas fa-arrow-left"></i> Retour au panneau
+          </a>
+        </div>
+        
+        <h1 style={{marginBottom: '2rem'}}>Gestion des Photos</h1>
+        
+        <div style={{background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', padding: '2rem', marginBottom: '2rem'}}>
+          <h2 style={{marginBottom: '1rem'}}>Uploader une nouvelle photo</h2>
+          <p style={{color: 'var(--color-text-secondary)', marginBottom: '1rem'}}>
+            Note : Pour le moment, l'upload de fichiers nécessite Cloudflare R2 en production. 
+            En développement local, vous pouvez ajouter manuellement les images dans <code>/public/static/images/uploads/</code>
+          </p>
+          <form method="POST" action="/admin/media/upload" enctype="multipart/form-data">
+            <div class="form-group" style={{marginBottom: '1rem'}}>
+              <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Titre de la photo</label>
+              <input 
+                type="text" 
+                name="title" 
+                class="form-input"
+                placeholder="Ex: Voyage en Italie"
+                style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px'}}
+              />
+            </div>
+            
+            <div class="form-group" style={{marginBottom: '1rem'}}>
+              <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Fichier image *</label>
+              <input 
+                type="file" 
+                name="file" 
+                accept="image/*"
+                required
+                style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px'}}
+              />
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-upload"></i> Uploader
+            </button>
+          </form>
+        </div>
+        
+        <h2 style={{marginBottom: '1.5rem'}}>Photos uploadées ({photos.results.length})</h2>
+        
+        {photos.results.length === 0 ? (
+          <div style={{textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '8px'}}>
+            <i class="fas fa-images" style={{fontSize: '4rem', color: 'var(--color-text-secondary)', marginBottom: '1rem'}}></i>
+            <p style={{fontSize: '1.2rem', color: 'var(--color-text-secondary)'}}>Aucune photo pour le moment</p>
+          </div>
+        ) : (
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem'}}>
+            {photos.results.map((photo: any) => (
+              <div style={{background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', overflow: 'hidden'}}>
+                <div style={{aspectRatio: '4/3', background: '#f5f5f5', position: 'relative', overflow: 'hidden'}}>
+                  <img 
+                    src={photo.url} 
+                    alt={photo.title || 'Photo'} 
+                    style={{width: '100%', height: '100%', objectFit: 'cover'}}
+                  />
+                </div>
+                <div style={{padding: '1rem'}}>
+                  {photo.title && (
+                    <h3 style={{marginBottom: '0.5rem', fontSize: '1rem'}}>{photo.title}</h3>
+                  )}
+                  <p style={{fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '0.5rem'}}>
+                    {new Date(photo.created_at).toLocaleDateString('fr-FR')}                    
+                  </p>
+                  <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem'}}>
+                    <input 
+                      type="text" 
+                      value={photo.url}
+                      readonly
+                      onclick="this.select()"
+                      style={{flex: 1, padding: '0.5rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.85rem', fontFamily: 'monospace'}}
+                    />
+                    <button 
+                      onclick="navigator.clipboard.writeText('{photo.url}'); alert('URL copiée !')"
+                      style={{padding: '0.5rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'}}
+                      title="Copier l'URL"
+                    >
+                      <i class="fas fa-copy"></i>
+                    </button>
+                  </div>
+                  <form method="POST" action={`/admin/media/${photo.id}/delete`} onsubmit="return confirm('Supprimer cette photo ?')">
+                    <button 
+                      type="submit"
+                      style={{width: '100%', padding: '0.5rem', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.9rem'}}
+                    >
+                      <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>,
+    { title: 'Gestion des Photos - Admin' }
+  )
+})
+
+// Traiter l'upload de photo
+app.post('/admin/media/upload', async (c) => {
+  console.log('=== DÉBUT UPLOAD ===')
+  
+  const body = await c.req.parseBody()
+  console.log('Body:', body)
+  
+  const file = body.file as File
+  console.log('File:', file)
+  
+  if (!file) {
+    console.log('❌ Aucun fichier détecté')
+    return c.redirect('/admin/media?error=no-file')
+  }
+
+  // Générer un nom de fichier unique
+  const ext = file.name.split('.').pop()
+  const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`
+  console.log('Filename généré:', filename)
+  
+  try {
+    console.log('Upload vers R2...')
+    
+    // Upload vers R2
+    const arrayBuffer = await file.arrayBuffer()
+    console.log('ArrayBuffer créé, taille:', arrayBuffer.byteLength)
+    
+    await c.env.PHOTOS_BUCKET.put(filename, arrayBuffer, {
+      httpMetadata: {
+        contentType: file.type
+      }
+    })
+    
+    console.log('✅ Upload R2 réussi!')
+    
+    // URL publique
+    const publicUrl = `https://pub-d405710240234e2fa868c5dc2e1f8cdb.r2.dev/${filename}`
+    console.log('URL publique:', publicUrl)
+    
+    // Enregistrer dans la DB
+    await c.env.db
+      .prepare('INSERT INTO photos (url, caption, created_at) VALUES (?, ?, ?)')
+      .bind(publicUrl, file.name, new Date().toISOString())
+      .run()
+    
+    console.log('✅ Enregistré dans la DB')
+    
+    return c.redirect('/admin/media')
+  } catch (error) {
+    console.error('❌ Upload error:', error)
+    return c.redirect('/admin/media?error=upload-failed')
+  }
+})
+// Supprimer une photo
+app.post('/admin/media/:id/delete', async (c) => {
+  const id = c.req.param('id')
+  
+  try {
+    await c.env.db
+      .prepare('DELETE FROM photos WHERE id = ?')
+      .bind(id)
+      .run()
+    
+    return c.redirect('/admin/media')
+  } catch (error) {
+    return c.render(
+      <>
+        <div style={{maxWidth: '600px', margin: '4rem auto', padding: '2rem', background: 'white', borderRadius: '8px'}}>
+          <div style={{color: 'red', padding: '1rem', background: '#ffe6e6', borderRadius: '4px', marginBottom: '1rem'}}>
+            ❌ Erreur : {error.message}
+          </div>
+          <a href="/admin/media" class="btn btn-secondary">Retour</a>
+        </div>
+      </>,
+      { title: 'Erreur - Admin' }
+    )
+  }
+})
+
+
+// Déconnexion
+app.get('/admin/logout', (c) => {
+  setCookie(c, 'auth_token', '', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'Lax',
+    maxAge: 0
+  })
+  
+  return c.redirect('/admin/login')
+})
+
+
 
 export default app

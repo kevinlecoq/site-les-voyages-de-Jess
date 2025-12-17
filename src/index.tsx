@@ -963,66 +963,162 @@ app.get('/contact', (c) => {
             </p>
           </div>
 
-          <form id="quote-form" style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)'}}>
-            <div class="form-group">
-              <label class="form-label" for="name">Nom complet *</label>
-              <input type="text" id="name" name="name" class="form-input" required />
+          {/* Barre de progression */}
+          <div id="progress-bar" style={{marginBottom: '2rem'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', marginBottom: '1rem'}}>
+              {/* Ligne de fond */}
+              <div style={{position: 'absolute', top: '50%', left: '0', right: '0', height: '4px', background: '#E5E7EB', zIndex: 0, borderRadius: '2px'}}></div>
+              {/* Ligne de progression */}
+              <div id="progress-line" style={{position: 'absolute', top: '50%', left: '0', height: '4px', background: 'var(--color-primary)', zIndex: 1, width: '0%', transition: 'width 0.3s ease', borderRadius: '2px'}}></div>
+              
+              {/* Étapes */}
+              <div class="progress-step active" data-step="1" style={{position: 'relative', zIndex: 2}}>
+                <div style={{width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.1rem', transition: 'all 0.3s ease'}}>1</div>
+                <div style={{position: 'absolute', top: '50px', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontSize: '0.875rem', color: 'var(--color-primary)', fontWeight: '500'}}>Qui êtes-vous ?</div>
+              </div>
+              
+              <div class="progress-step" data-step="2" style={{position: 'relative', zIndex: 2}}>
+                <div style={{width: '40px', height: '40px', borderRadius: '50%', background: '#E5E7EB', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.1rem', transition: 'all 0.3s ease'}}>2</div>
+                <div style={{position: 'absolute', top: '50px', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontSize: '0.875rem', color: '#6B7280'}}>Votre destination</div>
+              </div>
+              
+              <div class="progress-step" data-step="3" style={{position: 'relative', zIndex: 2}}>
+                <div style={{width: '40px', height: '40px', borderRadius: '50%', background: '#E5E7EB', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.1rem', transition: 'all 0.3s ease'}}>3</div>
+                <div style={{position: 'absolute', top: '50px', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontSize: '0.875rem', color: '#6B7280'}}>Détails</div>
+              </div>
+              
+              <div class="progress-step" data-step="4" style={{position: 'relative', zIndex: 2}}>
+                <div style={{width: '40px', height: '40px', borderRadius: '50%', background: '#E5E7EB', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.1rem', transition: 'all 0.3s ease'}}>4</div>
+                <div style={{position: 'absolute', top: '50px', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontSize: '0.875rem', color: '#6B7280'}}>Votre projet</div>
+              </div>
             </div>
+          </div>
 
-            <div class="form-group">
-              <label class="form-label" for="email">Email *</label>
-              <input type="email" id="email" name="email" class="form-input" required />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="phone">Téléphone</label>
-              <input type="tel" id="phone" name="phone" class="form-input" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="destination">Destination souhaitée *</label>
-              <input type="text" id="destination" name="destination" class="form-input" placeholder="Ex: Japon, Italie, Amérique du Sud..." required />
-            </div>
-
-            <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+          {/* Formulaire multi-étapes */}
+          <form id="quote-form" style={{background: 'white', padding: '2.5rem', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', minHeight: '450px'}}>
+            
+            {/* ÉTAPE 1 : Coordonnées */}
+            <div class="form-step active" data-step="1">
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontSize: '1.5rem'}}>
+                <i class="far fa-user"></i> Qui êtes-vous ?
+              </h3>
+              
               <div class="form-group">
-                <label class="form-label" for="duration">Durée du voyage *</label>
-                <select id="duration" name="duration" class="form-select" required>
+                <label class="form-label" for="name">Nom complet :</label>
+                <input type="text" id="name" name="name" class="form-input" placeholder="Jessica Dupont" required />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="email">Email :</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="jessica@exemple.com" required />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="phone">Téléphone (optionnel) :</label>
+                <input type="tel" id="phone" name="phone" class="form-input" placeholder="+33 6 12 34 56 78" />
+              </div>
+            </div>
+
+            {/* ÉTAPE 2 : Destination */}
+            <div class="form-step" data-step="2" style={{display: 'none'}}>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontSize: '1.5rem'}}>
+                <i class="fas fa-globe-americas"></i> Où rêvez-vous d'aller ?
+              </h3>
+              
+              <div class="form-group">
+                <label class="form-label" for="destination">Destination souhaitée :</label>
+                <input type="text" id="destination" name="destination" class="form-input" 
+                       placeholder="Ex: Japon, Patagonie, Islande, Bali..." required />
+                <p style={{fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem'}}>
+                  💡 Vous hésitez entre plusieurs destinations ? Listez-les !
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="travel-dates">Période souhaitée (optionnel)</label>
+                <input type="text" id="travel-dates" name="travel_dates" class="form-input" 
+                       placeholder="Ex: Été 2025, Septembre, Dates flexibles..." />
+              </div>
+            </div>
+
+            {/* ÉTAPE 3 : Détails pratiques */}
+            <div class="form-step" data-step="3" style={{display: 'none'}}>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontSize: '1.5rem'}}>
+                <i class="far fa-calendar-alt"></i> Détails pratiques
+              </h3>
+              
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+                <div class="form-group">
+                  <label class="form-label" for="duration">Durée du voyage :</label>
+                  <select id="duration" name="duration" class="form-select" required>
+                    <option value="">Choisir...</option>
+                    <option value="2-6">2 à 6 jours</option>
+                    <option value="7-14">7 à 14 jours</option>
+                    <option value="15-21">15 à 21 jours</option>
+                    <option value="21+">Plus de 21 jours</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="travelers">Nombre de voyageurs :</label>
+                  <input type="number" id="travelers" name="travelers" class="form-input" min="1" placeholder="2" required />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="budget">Budget estimé par personne :</label>
+                <select id="budget" name="budget" class="form-select">
                   <option value="">Choisir...</option>
-                  <option value="2-6">2 à 6 jours</option>
-                  <option value="7-14">7 à 14 jours</option>
-                  <option value="15-21">15 à 21 jours</option>
-                  <option value="21+">Plus de 21 jours</option>
+                  <option value="low">Moins de 1000€/pers</option>
+                  <option value="medium">1000€ - 3000€/pers</option>
+                  <option value="high">3000€ - 5000€/pers</option>
+                  <option value="luxury">Plus de 5000€/pers</option>
                 </select>
               </div>
+            </div>
+
+                        {/* ÉTAPE 4 : Projet & champ libre */}
+            <div class="form-step" data-step="4" style={{display: 'none'}}>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontSize: '1.5rem'}}>
+                <i class="far fa-heart"></i> Parlez-moi de votre projet
+              </h3>
+              
+              <div class="form-group">
+                <label class="form-label" for="message">Qu'est-ce qui vous fait rêver ?</label>
+                <textarea id="message" name="message" class="form-textarea" rows="6"
+                          placeholder="Ex: Nous aimons la randonnée et les paysages sauvages. Nous recherchons un mélange d'aventure et de détente..." 
+                          style={{width: '100%', resize: 'none', display: 'block', marginTop: '0.5rem'}}
+                          required></textarea>
+              </div>
 
               <div class="form-group">
-                <label class="form-label" for="travelers">Nombre de voyageurs *</label>
-                <input type="number" id="travelers" name="travelers" class="form-input" min="1" required />
+                <label class="form-label" for="special-requests">
+                  Qu'est-ce qui rendrait ce voyage parfait pour vous ? (optionnel)
+                </label>
+                <textarea id="special-requests" name="special_requests" class="form-textarea" rows="6"
+                          placeholder="Ex: Voyager avec notre chien, célébrer un anniversaire, éviter les longs vols, besoin d'accessibilité, allergies alimentaires..."
+                          style={{width: '100%', resize: 'none', display: 'block', marginTop: '0.5rem'}}></textarea>
+                <p style={{fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem'}}>
+                  💬 Partagez tout ce qui vous semble important : occasions spéciales, contraintes, préférences...
+                </p>
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="budget">Budget estimé</label>
-              <select id="budget" name="budget" class="form-select">
-                <option value="">Choisir...</option>
-                <option value="low">Moins de 1000€/pers</option>
-                <option value="medium">1000€ - 3000€/pers</option>
-                <option value="high">3000€ - 5000€/pers</option>
-                <option value="luxury">Plus de 5000€/pers</option>
-              </select>
-            </div>
 
-            <div class="form-group">
-              <label class="form-label" for="message">Parlez-moi de votre projet *</label>
-              <textarea id="message" name="message" class="form-textarea" 
-                        placeholder="Qu'est-ce qui vous fait rêver? Quels types d'expériences recherchez-vous?" 
-                        required></textarea>
+            {/* Boutons de navigation */}
+            <div style={{display: 'flex', justifyContent: 'space-between', marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #E5E7EB'}}>
+              <button type="button" id="prev-btn" class="btn" style={{visibility: 'hidden', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem'}}>
+                <i class="fas fa-arrow-left"></i> Précédent
+              </button>
+              
+              <button type="button" id="next-btn" class="btn btn-primary" style={{display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem'}}>
+                Suivant <i class="fas fa-arrow-right"></i>
+              </button>
+              
+              <button type="submit" id="submit-btn" class="btn btn-primary" style={{display: 'none', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 2rem'}}>
+                <i class="fas fa-paper-plane"></i> Envoyer ma demande
+              </button>
             </div>
-
-            <button type="submit" class="btn btn-primary" style={{width: '100%', padding: '1rem', fontSize: '1.1rem'}}>
-              <i class="fas fa-paper-plane"></i> Envoyer ma demande
-            </button>
           </form>
 
           <div style={{marginTop: '2rem', textAlign: 'center', padding: '2rem'}}>
@@ -1042,10 +1138,154 @@ app.get('/contact', (c) => {
           </div>
         </div>
       </section>
+
+{/* CSS pour améliorer les textarea */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .form-textarea {
+          font-family: inherit;
+          font-size: 1rem;
+          padding: 0.75rem;
+          border: 1px solid #D1D5DB;
+          border-radius: 8px;
+          outline: none;
+          transition: border-color 0.2s ease;
+        }
+        
+        .form-textarea:focus {
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 3px rgba(139, 92, 73, 0.1);
+        }
+        
+        .form-textarea::placeholder {
+          color: #9CA3AF;
+        }
+      `}} />
+
+      {/* JavaScript pour le formulaire multi-étapes */}
+      <script dangerouslySetInnerHTML={{__html: `
+        (function() {
+          let currentStep = 1;
+          const totalSteps = 4;
+          
+          const nextBtn = document.getElementById('next-btn');
+          const prevBtn = document.getElementById('prev-btn');
+          const submitBtn = document.getElementById('submit-btn');
+          const progressLine = document.getElementById('progress-line');
+          
+          function updateStep() {
+            // Masquer toutes les étapes
+            document.querySelectorAll('.form-step').forEach(step => {
+              step.style.display = 'none';
+            });
+            
+            // Afficher l'étape courante avec animation
+            const currentStepEl = document.querySelector('.form-step[data-step="' + currentStep + '"]');
+            if (currentStepEl) {
+              currentStepEl.style.display = 'block';
+              currentStepEl.style.animation = 'fadeIn 0.4s ease-in-out';
+            }
+            
+            // Mettre à jour la barre de progression
+            const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            progressLine.style.width = progressPercentage + '%';
+            
+            // Mettre à jour les indicateurs d'étape
+            document.querySelectorAll('.progress-step').forEach((step, index) => {
+              const stepNum = index + 1;
+              const circle = step.querySelector('div:first-child');
+              const label = step.querySelector('div:last-child');
+              
+              if (stepNum < currentStep) {
+                // Étape complétée
+                circle.style.background = 'var(--color-secondary)';
+                circle.style.color = 'white';
+                circle.innerHTML = '<i class="fas fa-check"></i>';
+                label.style.color = 'var(--color-secondary)';
+              } else if (stepNum === currentStep) {
+                // Étape active
+                circle.style.background = 'var(--color-primary)';
+                circle.style.color = 'white';
+                circle.textContent = stepNum;
+                label.style.color = 'var(--color-primary)';
+                label.style.fontWeight = '600';
+              } else {
+                // Étape à venir
+                circle.style.background = '#E5E7EB';
+                circle.style.color = '#6B7280';
+                circle.textContent = stepNum;
+                label.style.color = '#6B7280';
+                label.style.fontWeight = '400';
+              }
+            });
+            
+            // Gérer la visibilité des boutons
+            prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+            
+            if (currentStep === totalSteps) {
+              nextBtn.style.display = 'none';
+              submitBtn.style.display = 'flex';
+            } else {
+              nextBtn.style.display = 'flex';
+              submitBtn.style.display = 'none';
+            }
+          }
+          
+          function validateStep(step) {
+            const stepEl = document.querySelector('.form-step[data-step="' + step + '"]');
+            const requiredInputs = stepEl.querySelectorAll('[required]');
+            
+            for (let input of requiredInputs) {
+              if (!input.value.trim()) {
+                input.focus();
+                input.style.borderColor = '#EF4444';
+                setTimeout(() => { input.style.borderColor = ''; }, 2000);
+                return false;
+              }
+            }
+            return true;
+          }
+          
+          nextBtn.addEventListener('click', function() {
+            if (validateStep(currentStep)) {
+              if (currentStep < totalSteps) {
+                currentStep++;
+                updateStep();
+              }
+            }
+          });
+          
+          prevBtn.addEventListener('click', function() {
+            if (currentStep > 1) {
+              currentStep--;
+              updateStep();
+            }
+          });
+          
+          // Initialiser
+          updateStep();
+          
+          // Ajouter l'animation CSS
+          const style = document.createElement('style');
+          style.textContent = \`
+            @keyframes fadeIn {
+              from {
+                opacity: 0;
+                transform: translateY(10px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+          \`;
+          document.head.appendChild(style);
+        })();
+      `}} />
     </>,
     { title: 'Contact - Les Voyages de Jess' }
   )
 })
+
 
 // ============================================
 // API ROUTES
