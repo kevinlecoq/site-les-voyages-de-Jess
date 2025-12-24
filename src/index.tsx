@@ -99,8 +99,8 @@ app.use('*', async (c, next) => {
     },
     "url": "https://lesvoyagesdejess.ca",
     "sameAs": [
-      "https://www.facebook.com/lesvoyagesdejess",
-      "https://www.instagram.com/lesvoyagesdejess"
+      "https://www.facebook.com/jessica.finiel",
+      "https://www.instagram.com/lesvoyagesde_jess"
     ]
   })}
   </script>
@@ -173,8 +173,8 @@ app.use('*', async (c, next) => {
               <h3>Contact</h3>
               <p><i class="fas fa-envelope"></i> contact@lesvoyagesdejess.ca</p>
               <div class="social-links">
-                <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+                <a href="https://www.instagram.com/lesvoyagesde_jess" class="social-link" target="_blank"><i class="fab fa-instagram"></i></a>
+                <a href="https://www.facebook.com/jessica.finiel" class="social-link" target="_blank"><i class="fab fa-facebook"></i></a>
               </div>
             </div>
           </div>
@@ -1131,7 +1131,7 @@ app.get('/contact', (c) => {
             </p>
             <p style={{fontSize: '1.1rem'}}>
               <i class="fab fa-instagram" style={{color: 'var(--color-secondary)'}}></i> 
-              <a href="https://instagram.com/lesvoyagesdejess" target="_blank" style={{color: 'var(--color-secondary)', textDecoration: 'none'}}>
+              <a href="https://instagram.com/lesvoyagesde_jess" target="_blank" style={{color: 'var(--color-secondary)', textDecoration: 'none'}}>
                 @lesvoyagesdejess
               </a>
             </p>
