@@ -223,7 +223,7 @@ p {
 
 /* Section Hero */
 .hero {
-  background-image: url('/static/images/hero-background.jpg');
+  background-image: url('/static/images/hero-background.webp');
   background-size: cover;
   background-position: center;
   position: relative;

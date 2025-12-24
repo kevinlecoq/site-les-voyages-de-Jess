@@ -394,7 +394,7 @@ app.get('/', async (c) => {
   return c.render(
     <>
     {/* Section Hero */}
-<section class="hero" style={{backgroundImage: "url('/static/images/hero-background.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative'}}>
+<section class="hero" style={{backgroundImage: "url('/static/images/hero-background.webp')", backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative'}}>
   <div style={{background: 'rgba(0,0,0,0.3)', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1}}></div>
   <div style={{position: 'relative', zIndex: 2}}>
     <h1 class="hero-title" style={{color: 'white', fontSize: '4rem'}}>Les Voyages de Jess</h1>
@@ -498,7 +498,7 @@ app.get('/qui-suis-je', async (c) => {
       <section class="section">
         <div class="about-section">
           <div>
-            <img src={settingsMap.about_photo || '/static/images/jessica-placeholder.jpg'} 
+            <img src={settingsMap.about_photo || '/static/images/jessica-placeholder.webp'} 
                  alt="Jessica" 
                  class="about-image" />
           </div>
