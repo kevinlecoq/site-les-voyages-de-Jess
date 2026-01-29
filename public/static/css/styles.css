@@ -259,7 +259,6 @@ p {
   font-size: 3rem;
   margin-bottom: var(--spacing-sm);
   color: white !important;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   animation: fadeInUp 1s ease;
 }
 
@@ -269,7 +268,6 @@ p {
   font-family: 'Playfair Display', serif;
   font-style: italic;
   margin-bottom: var(--spacing-md);
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
   animation: fadeInUp 1.2s ease;
 }
 
