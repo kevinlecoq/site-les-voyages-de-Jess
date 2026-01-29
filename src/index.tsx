@@ -171,7 +171,7 @@ app.use('*', async (c, next) => {
             </div>
             <div class="footer-section">
               <h3>Contact</h3>
-              <p><i class="fas fa-envelope"></i> contact@lesvoyagesdejess.ca</p>
+              <p><i class="fas fa-envelope"></i> jessica.finiel@hotmail.com</p>
               <div class="social-links">
                 <a href="https://www.instagram.com/lesvoyagesde_jess" class="social-link" target="_blank"><i class="fab fa-instagram"></i></a>
                 <a href="https://www.facebook.com/jessica.finiel" class="social-link" target="_blank"><i class="fab fa-facebook"></i></a>
@@ -1125,8 +1125,8 @@ app.get('/contact', (c) => {
             <h3 style={{marginBottom: '1rem'}}>Ou contactez-moi directement :</h3>
             <p style={{fontSize: '1.1rem', marginBottom: '0.5rem'}}>
               <i class="fas fa-envelope" style={{color: 'var(--color-primary)'}}></i> 
-              <a href="mailto:contact@lesvoyagesdejess.ca" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
-                contact@lesvoyagesdejess.ca
+              <a href="mailto:jessica.finiel@hotmail.com" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
+                jessica.finiel@hotmail.com
               </a>
             </p>
             <p style={{fontSize: '1.1rem'}}>
