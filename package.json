@@ -16,6 +16,7 @@
     "crypto-browserify": "^3.12.1",
     "hono": "^4.10.4",
     "jsonwebtoken": "^9.0.2",
+    "resend": "^6.9.1",
     "stream-browserify": "^3.0.0",
     "util": "^0.12.5"
   },

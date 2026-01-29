@@ -232,6 +232,94 @@ app.use('*', async (c, next) => {
 })
 
 // ============================================
+// API CONTACT FORM
+// ============================================
+
+app.post('/api/contact', async (c) => {
+  try {
+    const formData = await c.req.json()
+    
+    // Vérifier que l'email de destination existe
+    if (!c.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY manquante')
+      return c.json({ success: false, error: 'Configuration serveur manquante' }, 500)
+    }
+
+    // Sauvegarder dans la base de données
+    await c.env.db.prepare(`
+      INSERT INTO quote_requests (name, email, phone, destination, travel_dates, duration, travelers, budget, message, special_requests)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      formData.name,
+      formData.email,
+      formData.phone || null,
+      formData.destination,
+      formData.travel_dates || null,
+      formData.duration,
+      formData.travelers,
+      formData.budget || null,
+      formData.message,
+      formData.special_requests || null
+    ).run()
+
+    // Envoyer l'email via Resend
+    const emailResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${c.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'Les Voyages de Jess <onboarding@resend.dev>',
+        to: 'jessica.finiel@hotmail.com',
+        subject: `Nouvelle demande de devis - ${formData.name}`,
+        html: `
+          <h2>Nouvelle demande de devis</h2>
+          <p><strong>Nom:</strong> ${formData.name}</p>
+          <p><strong>Email:</strong> ${formData.email}</p>
+          <p><strong>Téléphone:</strong> ${formData.phone || 'Non renseigné'}</p>
+          <hr>
+          <p><strong>Destination:</strong> ${formData.destination}</p>
+          <p><strong>Dates:</strong> ${formData.travel_dates || 'Flexibles'}</p>
+          <p><strong>Durée:</strong> ${formData.duration}</p>
+          <p><strong>Nombre de voyageurs:</strong> ${formData.travelers}</p>
+          <p><strong>Budget:</strong> ${formData.budget || 'Non précisé'}</p>
+          <hr>
+          <p><strong>Message:</strong></p>
+          <p>${formData.message}</p>
+          ${formData.special_requests ? `
+            <p><strong>Demandes spéciales:</strong></p>
+            <p>${formData.special_requests}</p>
+          ` : ''}
+        `
+      })
+    })
+
+    if (!emailResponse.ok) {
+      const errorData = await emailResponse.text()
+      console.error('Erreur Resend:', errorData)
+      return c.json({ 
+        success: false, 
+        error: 'Erreur lors de l\'envoi de l\'email' 
+      }, 500)
+    }
+
+    return c.json({ 
+      success: true, 
+      message: 'Votre demande a été envoyée avec succès!' 
+    })
+
+  } catch (error) {
+    console.error('Erreur formulaire contact:', error)
+    return c.json({ 
+      success: false, 
+      error: 'Une erreur est survenue' 
+    }, 500)
+  }
+})
+
+
+// ============================================
 // API CHATBOT
 // ============================================
 
