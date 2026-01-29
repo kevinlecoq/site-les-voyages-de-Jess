@@ -271,7 +271,7 @@ app.post('/api/contact', async (c) => {
       },
       body: JSON.stringify({
         from: 'Les Voyages de Jess <onboarding@resend.dev>',
-        to: 'jessica.finiel@hotmail.com',
+        to: 'kevin.lecoq14@gmail.com',
         subject: `Nouvelle demande de devis - ${formData.name}`,
         html: `
           <h2>Nouvelle demande de devis</h2>
