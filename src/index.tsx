@@ -271,7 +271,7 @@ app.post('/api/contact', async (c) => {
       },
       body: JSON.stringify({
         from: 'Les Voyages de Jess <onboarding@resend.dev>',
-        to: 'kevin.lecoq14@gmail.com',
+        to: 'jessica.finiel@hotmail.com',
         subject: `Nouvelle demande de devis - ${formData.name}`,
         html: `
           <h2>Nouvelle demande de devis</h2>
@@ -1421,7 +1421,7 @@ app.post('/api/quote-request', async (c) => {
       },
       body: JSON.stringify({
         from: 'Les Voyages de Jess <onboarding@resend.dev>',
-        to: 'kevin.lecoq14@gmail.com',
+        to: 'jessica.finiel@hotmail.com',
         subject: `Nouvelle demande de devis - ${data.name}`,
         html: `
           <h2>Nouvelle demande de devis</h2>
