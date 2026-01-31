@@ -171,7 +171,7 @@ app.use('*', async (c, next) => {
             </div>
             <div class="footer-section">
               <h3>Contact</h3>
-              <p><i class="fas fa-envelope"></i> jessica.finiel@hotmail.com</p>
+              <p><i class="fas fa-envelope"></i> contact@lesvoyagesdejess.com</p>
               <div class="social-links">
                 <a href="https://www.instagram.com/lesvoyagesde_jess" class="social-link" target="_blank"><i class="fab fa-instagram"></i></a>
                 <a href="https://www.facebook.com/jessica.finiel" class="social-link" target="_blank"><i class="fab fa-facebook"></i></a>
@@ -271,7 +271,7 @@ app.post('/api/contact', async (c) => {
       },
       body: JSON.stringify({
         from: 'Les Voyages de Jess <onboarding@resend.dev>',
-        to: 'jessica.finiel@hotmail.com',
+        to: 'contact@lesvoyagesdejess.com',
         subject: `Nouvelle demande de devis - ${formData.name}`,
         html: `
           <h2>Nouvelle demande de devis</h2>
@@ -1213,8 +1213,8 @@ app.get('/contact', (c) => {
             <h3 style={{marginBottom: '1rem'}}>Ou contactez-moi directement :</h3>
             <p style={{fontSize: '1.1rem', marginBottom: '0.5rem'}}>
               <i class="fas fa-envelope" style={{color: 'var(--color-primary)'}}></i> 
-              <a href="mailto:jessica.finiel@hotmail.com" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
-                jessica.finiel@hotmail.com
+              <a href="mailto:contact@lesvoyagesdejess.com" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
+                contact@lesvoyagesdejess.com
               </a>
             </p>
             <p style={{fontSize: '1.1rem'}}>
@@ -1421,7 +1421,7 @@ app.post('/api/quote-request', async (c) => {
       },
       body: JSON.stringify({
         from: 'Les Voyages de Jess <onboarding@resend.dev>',
-        to: 'jessica.finiel@hotmail.com',
+        to: 'contact@lesvoyagesdejess.com',
         subject: `Nouvelle demande de devis - ${data.name}`,
         html: `
           <h2>Nouvelle demande de devis</h2>
