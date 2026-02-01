@@ -234,7 +234,7 @@ p {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  filter: brightness(1.3) contrast(1.05);
+  filter: brightness(1.5) contrast(1.05);
 }
 
 /* Overlay sombre pour lisibilité */
@@ -245,7 +245,7 @@ p {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.25);
   z-index: 1;
 }
 
