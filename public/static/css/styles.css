@@ -260,6 +260,7 @@ p {
   font-size: 3rem;
   margin-bottom: var(--spacing-sm);
   color: white !important;
+  font-weight: normal;
   animation: fadeInUp 1s ease;
 }
 
