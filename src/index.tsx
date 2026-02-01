@@ -479,9 +479,8 @@ app.get('/', async (c) => {
   // Récupérer les formules
   const packages = await c.env.db.prepare('SELECT * FROM travel_packages ORDER BY sort_order ASC').all();
 
-  return c.render({
-  bodyClass: 'homepage',
-  children: <>
+ return c.render(
+  <>
 
     {/* Section Hero */}
 <section class="hero" style={{backgroundImage: "url('/static/images/hero-background.webp')", backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative'}}>
@@ -564,12 +563,8 @@ app.get('/', async (c) => {
         </a>
       </section>
     </>,
-    { 
-      title: 'Accueil - Les Voyages de Jess',
-      bodyClass: 'homepage'
-    }
+    { title: 'Accueil - Les Voyages de Jess' }
   )
-
 })
 
 // ============================================

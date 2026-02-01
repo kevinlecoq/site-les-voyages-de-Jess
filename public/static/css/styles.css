@@ -274,8 +274,9 @@ p {
 }
 
 /* Titre et sous-titre en noir sur la homepage uniquement */
-body.homepage .hero-title,
-body.homepage .hero-subtitle {
+/* On cible le hero qui contient le bouton "Je crée mon voyage" */
+.hero:has(a[href="/voyage-sur-mesure"]) .hero-title,
+.hero:has(a[href="/voyage-sur-mesure"]) .hero-subtitle {
   color: #000000 !important;
   text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
 }
