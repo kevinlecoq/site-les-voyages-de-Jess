@@ -234,7 +234,7 @@ p {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  filter: brightness(1.4) contrast(1.05);
+  filter: brightness(1.2) contrast(1.08);
 }
 
 /* Overlay sombre pour lisibilité */
@@ -245,7 +245,7 @@ p {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.25);
   z-index: 1;
 }
 
@@ -260,7 +260,6 @@ p {
   font-size: 3rem;
   margin-bottom: var(--spacing-sm);
   color: white !important;
-  text-shadow: 2px 2px 12px rgba(0, 0, 0, 0.7), 0px 0px 20px rgba(0, 0, 0, 0.5);
   animation: fadeInUp 1s ease;
 }
 
@@ -270,7 +269,6 @@ p {
   font-family: 'Playfair Display', serif;
   font-style: italic;
   margin-bottom: var(--spacing-md);
-  text-shadow: 2px 2px 12px rgba(0, 0, 0, 0.7), 0px 0px 20px rgba(0, 0, 0, 0.5);
   animation: fadeInUp 1.2s ease;
 }
 
