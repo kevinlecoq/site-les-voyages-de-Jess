@@ -61,7 +61,7 @@ app.use('*', async (c, next) => {
     return next()
   }
   
-  return jsxRenderer(({ children, title }) => {
+  return jsxRenderer(({ children, title, bodyClass }) => {
   return (
     <html lang="fr">
 <head>
@@ -117,7 +117,7 @@ app.use('*', async (c, next) => {
         {/* Styles personnalisés */}
         <link href="/static/css/styles.css" rel="stylesheet" />
       </head>
-      <body>
+      <body class={bodyClass || ''}>
         {/* Menu hamburger */}
         <button class="menu-toggle">
           <span></span>
@@ -479,8 +479,10 @@ app.get('/', async (c) => {
   // Récupérer les formules
   const packages = await c.env.db.prepare('SELECT * FROM travel_packages ORDER BY sort_order ASC').all();
 
-  return c.render(
-    <>
+  return c.render({
+  bodyClass: 'homepage',
+  children: <>
+
     {/* Section Hero */}
 <section class="hero" style={{backgroundImage: "url('/static/images/hero-background.webp')", backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative'}}>
   <div style={{background: 'rgba(0,0,0,0.3)', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1}}></div>
@@ -562,8 +564,12 @@ app.get('/', async (c) => {
         </a>
       </section>
     </>,
-    { title: 'Accueil - Les Voyages de Jess' }
+    { 
+      title: 'Accueil - Les Voyages de Jess',
+      bodyClass: 'homepage'
+    }
   )
+
 })
 
 // ============================================
