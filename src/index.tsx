@@ -483,7 +483,7 @@ app.get('/', async (c) => {
   <>
 
     {/* Section Hero */}
-<section class="hero" style={{backgroundImage: "url('/static/images/hero-background.webp')", backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative'}}>
+<section class="hero hero-homepage" style={{backgroundImage: "url('/static/images/hero-background.webp')", backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative'}}>
   <div style={{background: 'rgba(0,0,0,0.3)', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1}}></div>
   <div style={{position: 'relative', zIndex: 2}}>
     <h1 class="hero-title" style={{color: 'white', fontSize: '4rem'}}>Les Voyages de Jess</h1>
