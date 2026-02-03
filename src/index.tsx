@@ -501,13 +501,17 @@ app.get('/', async (c) => {
 
 {/* Section Formules */}
 <section class="section">
-  <h2 class="section-title">Mes Formules de Voyage</h2>
   
   {/* Texte explicatif éditable */}
   <div style={{maxWidth: '800px', margin: '0 auto 3rem', textAlign: 'center', padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)'}}>
     <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
-      {settingsMap.formules_intro || "En tant que Travel Planner, mon rôle est de concevoir votre voyage sur mesure de A à Z. Je m'occupe de créer un itinéraire personnalisé, adapté à vos envies, votre budget et votre rythme. Vous gagnez du temps et profitez de conseils d'experte pour un voyage qui vous ressemble vraiment."}
+	Mon rôle, c'est de transformer vos idées d'évasion en un voyage concret, fluide et surtout à votre image.
     </p>
+    <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-primary)', marginTop: '1rem'}}>
+      Ensemble, nous créons l'itinéraire parfait pour vous, selon vos envies, vos priorités et votre budget. Je conçois des voyages sur mesure, pensés dans les moindres détails : des lieux à découvrir, des hébergements à essayer, des activités à vivre, et des moments à savourer.
+    </p>
+    <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-primary)', marginTop: '1rem'}}>
+      Je vous offre une vision claire, personnalisée et inspirante pour que votre voyage se déroule sans stress tout en vous laissant la liberté de réserver et de le vivre à votre rythme.    </p>
   </div>
   
   <p style={{textAlign: 'center', color: 'var(--color-text-secondary)', maxWidth: '700px', margin: '0 auto 2rem'}}>
