@@ -501,6 +501,7 @@ app.get('/', async (c) => {
 
 {/* Section Formules */}
 <section class="section">
+<h2 class="section-title" style={{color: 'var(--color-accent)'}}>Mon rôle</h2>
   
   {/* Texte explicatif éditable */}
   <div style={{maxWidth: '800px', margin: '0 auto 3rem', textAlign: 'center', padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)'}}>
