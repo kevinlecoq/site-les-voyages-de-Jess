@@ -533,32 +533,60 @@ app.get('/', async (c) => {
 
 </div>
   
-  <p style={{textAlign: 'center', color: 'var(--color-text-secondary)', maxWidth: '700px', margin: '0 auto 2rem'}}>
-    Choisissez la formule qui correspond à vos envies. Chaque voyage est unique et adapté à votre rythme.
-  </p>
+{/* Section 4 étapes */}
+  <div style={{maxWidth: '1200px', margin: '0 auto 4rem', padding: '0 2rem'}}>
+    <h2 style={{color: 'var(--color-primary)', marginBottom: '3rem', fontFamily: '\'Brittany Signature\', cursive', fontSize: '2.5rem', textAlign: 'center'}}>
+      Les étapes de mon accompagnement
+    </h2>
+    
+    <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem'}}>
+      
+      {/* Étape 1 */}
+      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center'}}>
+        <div style={{fontSize: '2.5rem', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: '1rem'}}>1</div>
+        <h3 style={{color: 'var(--color-text-primary)', marginBottom: '1rem', fontSize: '1.2rem'}}>Formulaire à remplir</h3>
+        <p style={{color: 'var(--color-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem'}}>
+          Partagez vos souhaits, envies, budget...
+        </p>
+      </div>
+      
+      {/* Étape 2 */}
+      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center'}}>
+        <div style={{fontSize: '2.5rem', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: '1rem'}}>2</div>
+        <h3 style={{color: 'var(--color-text-primary)', marginBottom: '1rem', fontSize: '1.2rem'}}>Appel découverte gratuit</h3>
+        <p style={{color: 'var(--color-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem'}}>
+          Par téléphone ou visioconférence pour cibler votre demande, vos critères et envies pour votre séjour.
+        </p>
+      </div>
+      
+      {/* Étape 3 */}
+      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center'}}>
+        <div style={{fontSize: '2.5rem', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: '1rem'}}>3</div>
+        <h3 style={{color: 'var(--color-text-primary)', marginBottom: '1rem', fontSize: '1.2rem'}}>Création et validation du devis</h3>
+        <p style={{color: 'var(--color-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem'}}>
+          Je vous présente un devis personnalisé que nous validons ensemble.
+        </p>
+      </div>
+      
+      {/* Étape 4 */}
+      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center'}}>
+        <div style={{fontSize: '2.5rem', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: '1rem'}}>4</div>
+        <h3 style={{color: 'var(--color-text-primary)', marginBottom: '1rem', fontSize: '1.2rem'}}>Votre carnet de voyage personnalisé</h3>
+        <p style={{color: 'var(--color-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem'}}>
+          Création de votre carnet de voyage détaillé en format PDF.
+        </p>
+      </div>
+      
+    </div>
+  </div>
+  
+  {/* Lien vers les formules */}
+  <div style={{textAlign: 'center', margin: '3rem 0'}}>
+    <a href="/mes-formules" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
+      <i class="fas fa-suitcase"></i> Voir mes formules
+    </a>
+  </div>
 
-        <div class="packages-grid">
-          {packages.results.map((pkg: any) => (
-            <div class="package-card">
-              <div class="package-image">
-                {/* Placeholder - les images seront ajoutées plus tard */}
-              </div>
-              <div class="package-content">
-                <h3 class="package-name">{pkg.name}</h3>
-                <p class="package-duration"><i class="fas fa-clock"></i> {pkg.duration}</p>
-                <p class="package-description">{pkg.description}</p>
-                <div class="package-price">
-                  <div>
-                    <span class="price-amount">{pkg.price_eur}€</span>
-                    <span style={{color: 'var(--color-text-secondary)'}}> / </span>
-                    <span class="price-amount">{pkg.price_cad}$</span>
-                  </div>
-                  <a href="/voyage-sur-mesure" class="btn btn-primary">Découvrir</a>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
       </section>
 
       {/* Section À propos (courte) */}
