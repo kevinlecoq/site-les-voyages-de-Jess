@@ -503,17 +503,35 @@ app.get('/', async (c) => {
 <section class="section">
   
   {/* Texte explicatif éditable */}
-  <div style={{maxWidth: '800px', margin: '0 auto 3rem', textAlign: 'center', padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)'}}>
-    <h2 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontFamily: '\'Brittany Signature\', cursive'}}>Mon rôle</h2>
-    <p style={{lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
-	Mon rôle, c'est de transformer vos idées d'évasion en un voyage concret, fluide et surtout à votre image.
-    </p>
-    <p style={{lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
-      Ensemble, nous créons l'itinéraire parfait pour vous, selon vos envies, vos priorités et votre budget. Je conçois des voyages sur mesure, pensés dans les moindres détails : des lieux à découvrir, des hébergements à essayer, des activités à vivre, et des moments à savourer.
-    </p>
-    <p style={{lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
-      Je vous offre une vision claire, personnalisée et inspirante pour que votre voyage se déroule sans stress tout en vous laissant la liberté de réserver et de le vivre à votre rythme.    </p>
-  </div>
+  {/* Mise en page 2 colonnes : Texte + Photo */}
+  <div style={{display: 'flex', gap: '3rem', alignItems: 'center', maxWidth: '1200px', margin: '0 auto 3rem', flexWrap: 'wrap'}}>
+    
+    {/* Colonne gauche : Texte */}
+    <div style={{flex: '1 1 45%', minWidth: '300px'}}>
+      <div style={{padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+        <h2 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontFamily: '\'Brittany Signature\', cursive'}}>Mon rôle</h2>
+        <p style={{lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
+          Mon rôle, c'est de transformer vos idées d'évasion en un voyage concret, fluide et surtout à votre image.
+        </p>
+        <p style={{lineHeight: 1.8, color: 'var(--color-text-primary)', marginTop: '1rem'}}>
+          Ensemble, nous créons l'itinéraire parfait pour vous, selon vos envies, vos priorités et votre budget. Je conçois des voyages sur mesure, pensés dans les moindres détails : des lieux à découvrir, des hébergements à essayer, des activités à vivre, et des moments à savourer.
+        </p>
+        <p style={{lineHeight: 1.8, color: 'var(--color-text-primary)', marginTop: '1rem'}}>
+          Je vous offre une vision claire, personnalisée et inspirante pour que votre voyage se déroule sans stress tout en vous laissant la liberté de réserver et de le vivre à votre rythme.
+        </p>
+      </div>
+    </div>
+    
+    {/* Colonne droite : Photo */}
+    <div style={{flex: '1 1 45%', minWidth: '300px'}}>
+      <img 
+        src="/static/images/mon-role.webp" 
+        alt="Jessica - Travel Planner" 
+        style={{width: '100%', height: 'auto', borderRadius: 'var(--radius-lg)', objectFit: 'cover'}}
+      />
+    </div>
+
+</div>
   
   <p style={{textAlign: 'center', color: 'var(--color-text-secondary)', maxWidth: '700px', margin: '0 auto 2rem'}}>
     Choisissez la formule qui correspond à vos envies. Chaque voyage est unique et adapté à votre rythme.
