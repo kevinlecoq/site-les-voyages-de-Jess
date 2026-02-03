@@ -501,10 +501,10 @@ app.get('/', async (c) => {
 
 {/* Section Formules */}
 <section class="section">
-<h2 class="section-title" style={{color: 'var(--color-accent)'}}>Mon rôle</h2>
   
   {/* Texte explicatif éditable */}
   <div style={{maxWidth: '800px', margin: '0 auto 3rem', textAlign: 'center', padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)'}}>
+    <h2 style={{color: 'var(--color-accent)', marginBottom: '1.5rem', fontFamily: 'Playfair Display, serif'}}>Mon rôle</h2>
     <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
 	Mon rôle, c'est de transformer vos idées d'évasion en un voyage concret, fluide et surtout à votre image.
     </p>
