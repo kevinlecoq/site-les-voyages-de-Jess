@@ -534,15 +534,16 @@ app.get('/', async (c) => {
 </div>
   
 {/* Section 4 étapes */}
-  <div style={{maxWidth: '1200px', margin: '0 auto 4rem', padding: '0 2rem'}}>
+<div style={{background: 'var(--color-bg-warm)', padding: '4rem 2rem'}}>
+  <div style={{maxWidth: '1200px', margin: '0 auto'}}>
     <h2 style={{color: 'var(--color-primary)', marginBottom: '3rem', fontFamily: '\'Brittany Signature\', cursive', fontSize: '2.5rem', textAlign: 'center'}}>
       Les étapes de mon accompagnement
     </h2>
     
-    <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem'}}>
+    <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem'}}>
       
       {/* Étape 1 */}
-      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center'}}>
+      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center', transition: 'transform 0.3s ease, box-shadow 0.3s ease'}} class="etape-card">
         <div style={{fontSize: '2.5rem', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: '1rem'}}>1</div>
         <h3 style={{color: 'var(--color-text-primary)', marginBottom: '1rem', fontSize: '1.2rem'}}>Formulaire à remplir</h3>
         <p style={{color: 'var(--color-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem'}}>
@@ -551,7 +552,7 @@ app.get('/', async (c) => {
       </div>
       
       {/* Étape 2 */}
-      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center'}}>
+      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center', transition: 'transform 0.3s ease, box-shadow 0.3s ease'}} class="etape-card">
         <div style={{fontSize: '2.5rem', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: '1rem'}}>2</div>
         <h3 style={{color: 'var(--color-text-primary)', marginBottom: '1rem', fontSize: '1.2rem'}}>Appel découverte gratuit</h3>
         <p style={{color: 'var(--color-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem'}}>
@@ -560,7 +561,7 @@ app.get('/', async (c) => {
       </div>
       
       {/* Étape 3 */}
-      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center'}}>
+      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center', transition: 'transform 0.3s ease, box-shadow 0.3s ease'}} class="etape-card">
         <div style={{fontSize: '2.5rem', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: '1rem'}}>3</div>
         <h3 style={{color: 'var(--color-text-primary)', marginBottom: '1rem', fontSize: '1.2rem'}}>Création et validation du devis</h3>
         <p style={{color: 'var(--color-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem'}}>
@@ -569,7 +570,7 @@ app.get('/', async (c) => {
       </div>
       
       {/* Étape 4 */}
-      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center'}}>
+      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center', transition: 'transform 0.3s ease, box-shadow 0.3s ease'}} class="etape-card">
         <div style={{fontSize: '2.5rem', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: '1rem'}}>4</div>
         <h3 style={{color: 'var(--color-text-primary)', marginBottom: '1rem', fontSize: '1.2rem'}}>Votre carnet de voyage personnalisé</h3>
         <p style={{color: 'var(--color-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem'}}>
@@ -579,7 +580,8 @@ app.get('/', async (c) => {
       
     </div>
   </div>
-  
+</div>
+      
   {/* Lien vers les formules */}
   <div style={{textAlign: 'center', margin: '3rem 0'}}>
     <a href="/mes-formules" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
