@@ -505,13 +505,13 @@ app.get('/', async (c) => {
   {/* Texte explicatif éditable */}
   <div style={{maxWidth: '800px', margin: '0 auto 3rem', textAlign: 'center', padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)'}}>
     <h2 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontFamily: '\'Brittany Signature\', cursive'}}>Mon rôle</h2>
-    <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
+    <p style={{lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
 	Mon rôle, c'est de transformer vos idées d'évasion en un voyage concret, fluide et surtout à votre image.
     </p>
-    <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-primary)', marginTop: '1rem'}}>
+    <p style={{lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
       Ensemble, nous créons l'itinéraire parfait pour vous, selon vos envies, vos priorités et votre budget. Je conçois des voyages sur mesure, pensés dans les moindres détails : des lieux à découvrir, des hébergements à essayer, des activités à vivre, et des moments à savourer.
     </p>
-    <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-primary)', marginTop: '1rem'}}>
+    <p style={{lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
       Je vous offre une vision claire, personnalisée et inspirante pour que votre voyage se déroule sans stress tout en vous laissant la liberté de réserver et de le vivre à votre rythme.    </p>
   </div>
   
