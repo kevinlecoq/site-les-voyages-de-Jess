@@ -664,24 +664,6 @@ app.get('/mes-formules', async (c) => {
       </section>
 
       <section class="section">
-        <div style={{maxWidth: '900px', margin: '0 auto', textAlign: 'center', padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)', marginBottom: '3rem'}}>
-          <h2 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontFamily: '\'Brittany Signature\', cursive', fontSize: '2.5rem'}}>Mon rôle</h2>
-          <div style={{textAlign: 'left', lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
-            <p style={{marginBottom: '1rem'}}>
-              Mon rôle, c'est de transformer vos idées d'évasion en un voyage concret, fluide et surtout à votre image.
-            </p>
-            <p style={{marginBottom: '1rem'}}>
-              Ensemble, nous créons l'itinéraire parfait pour vous, selon vos envies, vos priorités et votre budget. Je conçois des voyages sur mesure, pensés dans les moindres détails : des lieux à découvrir, des hébergements à essayer, des activités à vivre, et des moments à savourer.
-            </p>
-            <p>
-              Je vous offre une vision claire, personnalisée et inspirante pour que votre voyage se déroule sans stress tout en vous laissant la liberté de réserver et de le vivre à votre rythme.
-            </p>
-          </div>
-        </div>
-      </section>
-
-
-      <section class="section">
         <div class="packages-grid">
           {packages.results.map((pkg: any) => (
             <div class="package-card">
