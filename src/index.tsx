@@ -1293,10 +1293,10 @@ app.get('/contact', (c) => {
                 <label class="form-label" for="budget">Budget estimé par personne :</label>
                 <select id="budget" name="budget" class="form-select">
                   <option value="">Choisir...</option>
-                  <option value="low">Moins de 1000€/pers</option>
-                  <option value="medium">1000€ - 3000€/pers</option>
-                  <option value="high">3000€ - 5000€/pers</option>
-                  <option value="luxury">Plus de 5000€/pers</option>
+                  <option value="low">Moins de 1000€ / 1500$ CAD</option>
+                  <option value="medium">1000€ - 3000€ / 1500$ - 4500$ CAD</option>
+                  <option value="high">3000€ - 5000€ / 4500$ - 7500$ CAD</option>
+                  <option value="luxury">Plus de 5000€ / 7500$ CAD</option>
                 </select>
               </div>
             </div>
