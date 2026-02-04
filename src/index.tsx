@@ -74,17 +74,21 @@ app.use('*', async (c, next) => {
   <meta name="keywords" content="travel planner québec, planificateur voyage, voyage sur mesure, agence voyage, jessica voyage" />
   
   {/* Open Graph (Facebook, LinkedIn) */}
-  <meta property="og:title" content="Les Voyages de Jess | Planificatrice de Voyages" />
-  <meta property="og:description" content="Planification de voyages sur mesure par Jessica. Europe, Asie, Amériques. Créez votre voyage de rêve." />
+  <meta property="og:title" content="Les Voyages de Jess | Planificatrice de Voyages Personnalisés" />
+  <meta property="og:description" content="Planification de voyages sur mesure par Jessica. Europe, Asie, Amériques. Créez votre voyage de rêve avec une professionnelle passionnée." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://lesvoyagesdejess.ca" />
-  <meta property="og:image" content="https://lesvoyagesdejess.ca/static/images/hero-background.jpg" />
+  <meta property="og:image" content="https://lesvoyagesdejess.ca/static/images/hero-background.webp" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="fr_CA" />
+  <meta property="og:site_name" content="Les Voyages de Jess" />
   
   {/* Twitter Card */}
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Les Voyages de Jess | Planificatrice de Voyages" />
-  <meta name="twitter:description" content="Planification de voyages sur mesure par Jessica" />
-  <meta name="twitter:image" content="https://lesvoyagesdejess.ca/static/images/hero-background.jpg" />
+  <meta name="twitter:title" content="Les Voyages de Jess | Planificatrice de Voyages Personnalisés" />
+  <meta name="twitter:description" content="Planification de voyages sur mesure par Jessica. Créez votre voyage de rêve avec une professionnelle passionnée." />
+  <meta name="twitter:image" content="https://lesvoyagesdejess.ca/static/images/hero-background.webp" />
   
   <script type="application/ld+json">
   {JSON.stringify({
@@ -527,6 +531,7 @@ app.get('/', async (c) => {
       <img 
         src="/static/images/mon-role.webp" 
         alt="Jessica - Travel Planner" 
+        loading="lazy"
         style={{width: '100%', height: 'auto', borderRadius: 'var(--radius-lg)', objectFit: 'cover'}}
       />
     </div>
@@ -540,7 +545,7 @@ app.get('/', async (c) => {
       Les étapes de mon accompagnement
     </h2>
     
-    <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem'}}>
+    <div class="etapes-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem'}}>
       
       {/* Étape 1 */}
       <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center', transition: 'transform 0.3s ease, box-shadow 0.3s ease'}} class="etape-card">

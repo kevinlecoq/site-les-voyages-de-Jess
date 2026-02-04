@@ -842,3 +842,28 @@ p {
   box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
 }
 
+/* ============================================
+   RESPONSIVE - Section 4 étapes
+   ============================================ */
+
+/* Tablette et petits écrans desktop (max 1024px) : 2 colonnes */
+@media (max-width: 1024px) {
+  .etapes-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.5rem !important;
+  }
+}
+
+/* Mobile (max 768px) : 1 colonne */
+@media (max-width: 768px) {
+  .etapes-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+  
+  /* Ajustement padding section sur mobile */
+  .etapes-grid {
+    padding: 0 1rem;
+  }
+}
+
