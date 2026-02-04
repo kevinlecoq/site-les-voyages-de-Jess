@@ -240,6 +240,58 @@ if (document.getElementById('packages-grid')) {
   loadPackages();
 }
 
+// Charger les articles récents dynamiquement
+async function loadRecentPosts() {
+  try {
+    const response = await fetch('/api/recent-posts');
+    const articles = await response.json();
+    
+    const carousel = document.querySelector('.blog-carousel');
+    if (!carousel) return;
+    
+    // Formater la date en français
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('fr-CA', { 
+        year: 'numeric', 
+        month: 'long'
+      });
+    }
+    
+    // Générer le HTML des cartes
+    carousel.innerHTML = articles.map(article => `
+      <div class="blog-card">
+        <div class="blog-card-image">
+          <img src="${article.image_url}" alt="${article.title}" loading="lazy" />
+        </div>
+        <div class="blog-card-content">
+          <h3 class="blog-card-title">${article.title}</h3>
+          <p class="blog-card-date">${formatDate(article.created_at)}</p>
+          <p class="blog-card-excerpt">${article.excerpt}</p>
+          <a href="${article.isExample ? '/blog' : '/blog/' + article.slug}" class="blog-card-link">
+            Lire l'article
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    `).join('');
+    
+    // Réactiver les animations de scroll après chargement
+    initScrollAnimations();
+    
+  } catch (error) {
+    console.error('Erreur lors du chargement des articles récents:', error);
+    // En cas d'erreur, ne rien afficher (le HTML statique reste en fallback)
+  }
+}
+
+// Charger les articles récents si on est sur la page d'accueil
+if (document.querySelector('.blog-carousel')) {
+  loadRecentPosts();
+}
+
 // Animation au scroll
 function initScrollAnimations() {
   const observer = new IntersectionObserver((entries) => {

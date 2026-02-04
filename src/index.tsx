@@ -1600,6 +1600,108 @@ app.get('/api/settings', async (c) => {
   return c.json(settingsMap)
 })
 
+// API: Récupérer les articles récents pour la homepage (max 4)
+app.get('/api/recent-posts', async (c) => {
+  try {
+    // Récupérer les 4 derniers articles publiés depuis la DB
+    const realArticles = await c.env.db.prepare(
+      'SELECT id, title, slug, excerpt, image_url, created_at FROM blog_posts WHERE published = 1 ORDER BY created_at DESC LIMIT 4'
+    ).all();
+
+    // Articles d'exemple (fallback si pas assez d'articles réels)
+    const exampleArticles = [
+      {
+        id: 'example-1',
+        title: '10 destinations incontournables en 2026',
+        slug: 'example-1',
+        excerpt: 'Découvrez les destinations qui feront rêver les voyageurs cette année. De l\'Europe à l\'Asie, voici mes coups de cœur.',
+        image_url: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&auto=format&fit=crop',
+        created_at: '2026-02-01',
+        isExample: true
+      },
+      {
+        id: 'example-2',
+        title: 'Comment préparer son voyage en 5 étapes',
+        slug: 'example-2',
+        excerpt: 'Les conseils essentiels pour organiser votre voyage sereinement, de la réservation aux derniers préparatifs.',
+        image_url: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&auto=format&fit=crop',
+        created_at: '2026-02-02',
+        isExample: true
+      },
+      {
+        id: 'example-3',
+        title: 'Voyage en famille : mes destinations préférées',
+        slug: 'example-3',
+        excerpt: 'Partir en famille demande une organisation particulière. Voici mes meilleures recommandations pour voyager avec des enfants.',
+        image_url: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800&auto=format&fit=crop',
+        created_at: '2026-02-03',
+        isExample: true
+      },
+      {
+        id: 'example-4',
+        title: 'Voyager en solo : mes meilleurs conseils',
+        slug: 'example-4',
+        excerpt: 'Le voyage en solo est une expérience unique. Découvrez mes astuces pour voyager seul(e) en toute sérénité.',
+        image_url: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&auto=format&fit=crop',
+        created_at: '2026-02-04',
+        isExample: true
+      }
+    ];
+
+    // Combiner articles réels + exemples pour toujours avoir 4 articles
+    const articles = [
+      ...realArticles.results.map((article: any) => ({
+        ...article,
+        isExample: false
+      })),
+      ...exampleArticles.slice(0, Math.max(0, 4 - realArticles.results.length))
+    ].slice(0, 4);
+
+    return c.json(articles);
+  } catch (error) {
+    console.error('Erreur récupération articles récents:', error);
+    // En cas d'erreur, renvoyer uniquement les articles d'exemple
+    return c.json([
+      {
+        id: 'example-1',
+        title: '10 destinations incontournables en 2026',
+        slug: 'example-1',
+        excerpt: 'Découvrez les destinations qui feront rêver les voyageurs cette année.',
+        image_url: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&auto=format&fit=crop',
+        created_at: '2026-02-01',
+        isExample: true
+      },
+      {
+        id: 'example-2',
+        title: 'Comment préparer son voyage en 5 étapes',
+        slug: 'example-2',
+        excerpt: 'Les conseils essentiels pour organiser votre voyage sereinement.',
+        image_url: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&auto=format&fit=crop',
+        created_at: '2026-02-02',
+        isExample: true
+      },
+      {
+        id: 'example-3',
+        title: 'Voyage en famille : mes destinations préférées',
+        slug: 'example-3',
+        excerpt: 'Partir en famille demande une organisation particulière.',
+        image_url: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800&auto=format&fit=crop',
+        created_at: '2026-02-03',
+        isExample: true
+      },
+      {
+        id: 'example-4',
+        title: 'Voyager en solo : mes meilleurs conseils',
+        slug: 'example-4',
+        excerpt: 'Le voyage en solo est une expérience unique.',
+        image_url: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&auto=format&fit=crop',
+        created_at: '2026-02-04',
+        isExample: true
+      }
+    ]);
+  }
+})
+
 
 // ============================================
 // ROUTES ADMIN - AUTHENTIFICATION
