@@ -289,3 +289,24 @@ style.textContent = `
   }
 `;
 document.head.appendChild(style);
+
+// ============================================
+// CAROUSEL BLOG ARTICLES
+// ============================================
+
+function scrollBlogCarousel(direction) {
+  const carousel = document.querySelector('.blog-carousel');
+  if (!carousel) return;
+  
+  const cardWidth = carousel.querySelector('.blog-card').offsetWidth;
+  const gap = 32; // 2rem = 32px
+  const scrollAmount = (cardWidth + gap) * direction;
+  
+  carousel.scrollBy({
+    left: scrollAmount,
+    behavior: 'smooth'
+  });
+}
+
+// Rendre la fonction globale pour l'attribut onclick
+window.scrollBlogCarousel = scrollBlogCarousel;

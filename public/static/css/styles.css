@@ -885,3 +885,126 @@ p {
   }
 }
 
+/* ============================================
+   CAROUSEL ARTICLES RÉCENTS
+   ============================================ */
+
+.blog-carousel-container {
+  position: relative;
+  padding: 0 3rem;
+}
+
+.blog-carousel {
+  display: flex;
+  gap: 2rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.blog-carousel::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.blog-card {
+  flex: 0 0 calc(33.333% - 1.33rem);
+  scroll-snap-align: start;
+  background: white;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.blog-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.blog-card-image {
+  width: 100%;
+  height: 200px;
+  background-size: cover;
+  background-position: center;
+}
+
+.blog-card-content {
+  padding: 1.5rem;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.carousel-btn:hover {
+  background: var(--color-accent-green);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-btn-prev {
+  left: 0;
+}
+
+.carousel-btn-next {
+  right: 0;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* Responsive Carousel */
+@media (max-width: 1024px) {
+  .blog-card {
+    flex: 0 0 calc(50% - 1rem);
+  }
+  
+  .blog-carousel-container {
+    padding: 0 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .blog-card {
+    flex: 0 0 85%;
+  }
+  
+  .blog-carousel-container {
+    padding: 0 2rem;
+  }
+  
+  .carousel-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .carousel-btn-prev {
+    left: -5px;
+  }
+  
+  .carousel-btn-next {
+    right: -5px;
+  }
+}
+
