@@ -867,3 +867,21 @@ p {
   }
 }
 
+/* ============================================
+   RESPONSIVE - Section "Les petits plus sur devis"
+   ============================================ */
+
+/* Desktop : Forcer 3 colonnes alignées */
+@media (min-width: 769px) {
+  .petits-plus-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+/* Mobile (max 768px) : 1 colonne */
+@media (max-width: 768px) {
+  .petits-plus-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+

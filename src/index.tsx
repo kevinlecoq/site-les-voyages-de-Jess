@@ -493,7 +493,7 @@ app.get('/', async (c) => {
     <h1 class="hero-title" style={{color: 'white', fontSize: '4rem'}}>Les Voyages de Jess</h1>
     <p class="hero-subtitle" style={{fontSize: '1.2rem', color: 'white', fontFamily: "'Alice', serif"}}>Créatrice de voyages sur mesure</p>
     <p style={{fontSize: '1.3rem', color: 'white', marginTop: '1rem', fontStyle: 'italic', fontFamily: "'Alice', serif"}}>
-      "Trouvez votre chemin de traverse, là où commence la magie du voyage"
+      "Parce que chaque voyageur est unique, chaque voyage doit l'être aussi."
     </p>
     <div style={{marginTop: '2rem'}}>
       <a href="/contact" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
@@ -738,7 +738,7 @@ app.get('/mes-formules', async (c) => {
           <p style={{fontSize: '1.1rem', color: 'var(--color-text-secondary)', marginBottom: '3rem'}}>
             Envie d'aller plus loin ? Découvrez mes services supplémentaires pour rendre votre voyage encore plus mémorable.
           </p>
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem'}}>
+          <div class="petits-plus-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem'}}>
             <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
               <div style={{fontSize: '3rem', marginBottom: '1rem'}}>🐕</div>
               <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Voyages dog-friendly</h3>
@@ -836,7 +836,7 @@ app.get('/voyage-sur-mesure', (c) => {
           <p style={{fontSize: '1.1rem', color: 'var(--color-text-secondary)', marginBottom: '3rem'}}>
             Envie d'aller plus loin ? Découvrez mes services supplémentaires.
           </p>
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem'}}>
+          <div class="petits-plus-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem'}}>
             <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
               <div style={{fontSize: '3rem', marginBottom: '1rem'}}>🐕</div>
               <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Voyages dog-friendly</h3>
