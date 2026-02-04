@@ -815,6 +815,7 @@ app.get('/mes-formules', async (c) => {
                 </div>
                 <div class="package-price">
                   <div>
+                    <span style={{fontSize: '0.9rem', color: 'var(--color-text-secondary)', display: 'block', marginBottom: '0.25rem'}}>À partir de</span>
                     <span class="price-amount">{pkg.price_eur}€</span>
                     <span style={{color: 'var(--color-text-secondary)'}}> / </span>
                     <span class="price-amount">{pkg.price_cad}$</span>
