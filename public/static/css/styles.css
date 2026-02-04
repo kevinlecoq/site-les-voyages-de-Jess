@@ -1008,3 +1008,227 @@ p {
   }
 }
 
+/* ============================================
+   FORMULAIRE MODERNE - Demande de devis
+   ============================================ */
+
+/* Groupes de champs */
+.form-group {
+  margin-bottom: 1.75rem;
+}
+
+/* Labels modernes */
+.form-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.01em;
+}
+
+/* Inputs et selects - Design moderne */
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  font-family: 'Alice', serif;
+  color: var(--color-text-primary);
+  background-color: #FAFAFA;
+  border: 2px solid #E5E7EB;
+  border-radius: var(--radius-md);
+  transition: all 0.3s ease;
+  outline: none;
+  line-height: 1.5;
+}
+
+/* Placeholder moderne */
+.form-input::placeholder,
+.form-select::placeholder {
+  color: #9CA3AF;
+  font-size: 0.95rem;
+}
+
+/* Focus state - Bordure turquoise */
+.form-input:focus,
+.form-select:focus {
+  background-color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(146, 181, 168, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Hover state */
+.form-input:hover,
+.form-select:hover {
+  border-color: #D1D5DB;
+}
+
+/* Select - Style moderne */
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2392B5A8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 20px;
+  padding-right: 3rem;
+  cursor: pointer;
+}
+
+/* Textarea moderne */
+.form-textarea {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  font-family: 'Alice', serif;
+  color: var(--color-text-primary);
+  background-color: #FAFAFA;
+  border: 2px solid #E5E7EB;
+  border-radius: var(--radius-md);
+  transition: all 0.3s ease;
+  outline: none;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 140px;
+}
+
+.form-textarea::placeholder {
+  color: #9CA3AF;
+  font-size: 0.95rem;
+}
+
+.form-textarea:focus {
+  background-color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(146, 181, 168, 0.1);
+}
+
+.form-textarea:hover {
+  border-color: #D1D5DB;
+}
+
+/* Boutons du formulaire multi-étapes */
+.form-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2.5rem;
+  gap: 1rem;
+}
+
+.btn-form-prev,
+.btn-form-next {
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-form-prev {
+  background-color: #F3F4F6;
+  color: var(--color-text-secondary);
+}
+
+.btn-form-prev:hover {
+  background-color: #E5E7EB;
+  transform: translateX(-2px);
+}
+
+.btn-form-next {
+  background-color: var(--color-primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(146, 181, 168, 0.3);
+}
+
+.btn-form-next:hover {
+  background-color: #7FA193;
+  transform: translateX(2px);
+  box-shadow: 0 4px 12px rgba(146, 181, 168, 0.4);
+}
+
+/* Input avec icône (optionnel) */
+.form-input-icon-wrapper {
+  position: relative;
+}
+
+.form-input-icon-wrapper .form-input {
+  padding-left: 3rem;
+}
+
+.form-input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-primary);
+  font-size: 1.2rem;
+}
+
+/* Grid pour inputs côte à côte */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* États de validation (optionnel) */
+.form-input.error,
+.form-select.error,
+.form-textarea.error {
+  border-color: #EF4444;
+}
+
+.form-input.error:focus,
+.form-select.error:focus,
+.form-textarea.error:focus {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.form-input.success,
+.form-select.success,
+.form-textarea.success {
+  border-color: #10B981;
+}
+
+/* Message d'aide */
+.form-help-text {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 0.875rem 1rem;
+    font-size: 16px; /* Évite le zoom sur iOS */
+  }
+  
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  
+  .btn-form-prev,
+  .btn-form-next {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+}
+
