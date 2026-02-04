@@ -1605,7 +1605,7 @@ app.get('/api/recent-posts', async (c) => {
   try {
     // Récupérer les 4 derniers articles publiés depuis la DB
     const realArticles = await c.env.db.prepare(
-      'SELECT id, title, slug, excerpt, image_url, created_at FROM blog_posts WHERE published = 1 ORDER BY created_at DESC LIMIT 4'
+      'SELECT id, title, slug, excerpt, featured_image, created_at FROM blog_posts WHERE published = 1 ORDER BY created_at DESC LIMIT 4'
     ).all();
 
     // Articles d'exemple (fallback si pas assez d'articles réels)
@@ -1651,7 +1651,12 @@ app.get('/api/recent-posts', async (c) => {
     // Combiner articles réels + exemples pour toujours avoir 4 articles
     const articles = [
       ...realArticles.results.map((article: any) => ({
-        ...article,
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt,
+        image_url: article.featured_image, // Renommer featured_image → image_url pour le frontend
+        created_at: article.created_at,
         isExample: false
       })),
       ...exampleArticles.slice(0, Math.max(0, 4 - realArticles.results.length))
