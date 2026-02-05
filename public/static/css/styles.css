@@ -267,6 +267,23 @@ p {
   background-image: url('/static/images/hero-contact-400.webp');
 }
 
+/* Optimisation mobile : réduire la hauteur hero pour éviter le crop latéral */
+@media (max-width: 767px) {
+  .hero {
+    min-height: 45vh;
+    background-position: center 35%;
+    padding: 3rem 1.5rem;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.1rem;
+  }
+}
+
 /* Tablet (800px) */
 @media (min-width: 768px) {
   .hero-home {
