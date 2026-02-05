@@ -877,7 +877,7 @@ app.get('/mes-formules', async (c) => {
 app.get('/voyage-sur-mesure', (c) => {
   return c.render(
     <>
-      <section class="hero">
+      <section class="hero hero-voyage-sur-mesure">
   <h1 class="hero-title">Votre Voyage sur Mesure</h1>
   <p class="hero-subtitle">Comment ça marche?</p>
 </section>
@@ -976,7 +976,7 @@ app.get('/voyage-sur-mesure', (c) => {
 app.get('/destinations', (c) => {
   return c.render(
     <>
-      <section class="hero">
+      <section class="hero hero-destinations">
         <h1 class="hero-title">Mes Destinations</h1>
       </section>
 
@@ -1124,7 +1124,7 @@ app.get('/faq', async (c) => {
 
   return c.render(
     <>
-      <section class="hero">
+      <section class="hero hero-faq">
         <h1 class="hero-title">Questions Fréquentes</h1>
         <p class="hero-subtitle">Tout ce que vous devez savoir</p>
       </section>
@@ -1166,7 +1166,7 @@ app.get('/blog', async (c) => {
 
   return c.render(
     <>
-      <section class="hero">
+      <section class="hero hero-blog">
         <h1 class="hero-title">Blog</h1>
         <p class="hero-subtitle">Récits, conseils et inspirations voyage</p>
       </section>
