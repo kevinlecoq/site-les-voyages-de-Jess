@@ -244,7 +244,7 @@ p {
 }
 
 .hero-voyage-sur-mesure {
-  background-image: url('/static/images/hero-voyage-sur-mesure-400.webp');
+  background-image: url('/static/images/hero-voyage-sur-mesure-400.webp?v=2');
 }
 
 .hero-formules {
@@ -274,7 +274,7 @@ p {
   }
   
   .hero-voyage-sur-mesure {
-    background-image: url('/static/images/hero-voyage-sur-mesure-800.webp');
+    background-image: url('/static/images/hero-voyage-sur-mesure-800.webp?v=2');
   }
   
   .hero-formules {
@@ -305,7 +305,7 @@ p {
   }
   
   .hero-voyage-sur-mesure {
-    background-image: url('/static/images/hero-voyage-sur-mesure-1200.webp');
+    background-image: url('/static/images/hero-voyage-sur-mesure-1200.webp?v=2');
   }
   
   .hero-formules {
