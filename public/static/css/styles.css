@@ -223,7 +223,6 @@ p {
 
 /* Section Hero */
 .hero {
-  background-image: url('/static/images/hero-background.webp');
   background-size: cover;
   background-position: center;
   position: relative;
@@ -235,6 +234,97 @@ p {
   justify-content: center;
   align-items: center;
   filter: brightness(1.2) contrast(1.08);
+}
+
+/* Hero backgrounds - Responsive par défaut (mobile) */
+.hero-home {
+  background-image: url('/static/images/hero-home-400.webp');
+}
+
+.hero-voyage-sur-mesure {
+  background-image: url('/static/images/hero-voyage-sur-mesure-400.webp');
+}
+
+.hero-formules {
+  background-image: url('/static/images/hero-formules-400.webp');
+}
+
+.hero-destinations {
+  background-image: url('/static/images/hero-destinations-400.webp');
+}
+
+.hero-faq {
+  background-image: url('/static/images/hero-faq-400.webp');
+}
+
+.hero-blog {
+  background-image: url('/static/images/hero-blog-400.webp');
+}
+
+.hero-contact {
+  background-image: url('/static/images/hero-contact-400.webp');
+}
+
+/* Tablet (800px) */
+@media (min-width: 768px) {
+  .hero-home {
+    background-image: url('/static/images/hero-home-800.webp');
+  }
+  
+  .hero-voyage-sur-mesure {
+    background-image: url('/static/images/hero-voyage-sur-mesure-800.webp');
+  }
+  
+  .hero-formules {
+    background-image: url('/static/images/hero-formules-800.webp');
+  }
+  
+  .hero-destinations {
+    background-image: url('/static/images/hero-destinations-800.webp');
+  }
+  
+  .hero-faq {
+    background-image: url('/static/images/hero-faq-800.webp');
+  }
+  
+  .hero-blog {
+    background-image: url('/static/images/hero-blog-800.webp');
+  }
+  
+  .hero-contact {
+    background-image: url('/static/images/hero-contact-800.webp');
+  }
+}
+
+/* Desktop (1200px) */
+@media (min-width: 1200px) {
+  .hero-home {
+    background-image: url('/static/images/hero-home-1200.webp');
+  }
+  
+  .hero-voyage-sur-mesure {
+    background-image: url('/static/images/hero-voyage-sur-mesure-1200.webp');
+  }
+  
+  .hero-formules {
+    background-image: url('/static/images/hero-formules-1200.webp');
+  }
+  
+  .hero-destinations {
+    background-image: url('/static/images/hero-destinations-1200.webp');
+  }
+  
+  .hero-faq {
+    background-image: url('/static/images/hero-faq-1200.webp');
+  }
+  
+  .hero-blog {
+    background-image: url('/static/images/hero-blog-1200.webp');
+  }
+  
+  .hero-contact {
+    background-image: url('/static/images/hero-contact-1200.webp');
+  }
 }
 
 /* Overlay sombre pour lisibilité */

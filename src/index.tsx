@@ -487,7 +487,7 @@ app.get('/', async (c) => {
   <>
 
     {/* Section Hero */}
-<section class="hero hero-homepage" style={{backgroundImage: "url('/static/images/hero-background.webp')", backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative'}}>
+<section class="hero hero-home hero-homepage">
   <div style={{background: 'rgba(0,0,0,0.3)', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1}}></div>
   <div style={{position: 'relative', zIndex: 2}}>
     <h1 class="hero-title" style={{color: 'white', fontSize: '4rem'}}>Les Voyages de Jess</h1>
@@ -788,7 +788,7 @@ app.get('/mes-formules', async (c) => {
 
   return c.render(
     <>
-      <section class="hero">
+      <section class="hero hero-formules">
         <h1 class="hero-title">Mes Formules</h1>
         <p class="hero-subtitle">Choisissez celle qui correspond à vos envies</p>
       </section>
@@ -1214,7 +1214,7 @@ app.get('/blog', async (c) => {
 app.get('/contact', (c) => {
   return c.render(
     <>
-      <section class="hero">
+      <section class="hero hero-contact">
         <h1 class="hero-title">Contact</h1>
         <p class="hero-subtitle">Commençons à planifier votre voyage</p>
       </section>
