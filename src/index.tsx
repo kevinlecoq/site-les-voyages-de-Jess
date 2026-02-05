@@ -1080,6 +1080,48 @@ app.get('/destinations', (c) => {
 app.get('/faq', async (c) => {
   const faqs = await c.env.db.prepare('SELECT * FROM faqs ORDER BY sort_order ASC').all();
 
+  // Fonction pour formater la réponse avec retours à la ligne et listes
+  const formatAnswer = (text: string) => {
+    if (!text) return '';
+    
+    // Séparer par lignes
+    const lines = text.split('\n');
+    let html = '';
+    let inList = false;
+    
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+      
+      // Détecter une ligne de liste (commence par • ou - ou *)
+      if (trimmedLine.match(/^[•\-\*]\s+/)) {
+        if (!inList) {
+          html += '<ul>';
+          inList = true;
+        }
+        const listContent = trimmedLine.replace(/^[•\-\*]\s+/, '');
+        html += `<li>${listContent}</li>`;
+      } else {
+        // Fermer la liste si on était dedans
+        if (inList) {
+          html += '</ul>';
+          inList = false;
+        }
+        
+        // Ajouter la ligne normale
+        if (trimmedLine) {
+          html += `<p>${trimmedLine}</p>`;
+        }
+      }
+    });
+    
+    // Fermer la liste si elle était ouverte
+    if (inList) {
+      html += '</ul>';
+    }
+    
+    return html;
+  };
+
   return c.render(
     <>
       <section class="hero">
@@ -1095,8 +1137,7 @@ app.get('/faq', async (c) => {
                 <span>{faq.question}</span>
                 <i class="fas fa-chevron-down faq-icon"></i>
               </div>
-              <div class="faq-answer">
-                <p>{faq.answer}</p>
+              <div class="faq-answer" dangerouslySetInnerHTML={{ __html: formatAnswer(faq.answer) }}>
               </div>
             </div>
           ))}
