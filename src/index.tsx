@@ -978,7 +978,6 @@ app.get('/destinations', (c) => {
     <>
       <section class="hero">
         <h1 class="hero-title">Mes Destinations</h1>
-        <p class="hero-subtitle">Les pays que je connais et pour lesquels je propose mes services</p>
       </section>
 
       <section class="section">
