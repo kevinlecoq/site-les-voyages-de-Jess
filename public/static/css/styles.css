@@ -234,6 +234,20 @@ p {
   justify-content: center;
   align-items: center;
   filter: brightness(1.2) contrast(1.08);
+  /* Fallback pour pages sans classe spécifique */
+  background-image: url('/static/images/hero-home-400.webp');
+}
+
+@media (min-width: 768px) {
+  .hero {
+    background-image: url('/static/images/hero-home-800.webp');
+  }
+}
+
+@media (min-width: 1200px) {
+  .hero {
+    background-image: url('/static/images/hero-home-1200.webp');
+  }
 }
 
 /* Hero backgrounds - Responsive par défaut (mobile) */
