@@ -119,7 +119,7 @@ app.use('*', async (c, next) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
         
         {/* Styles personnalisés */}
-        <link href="/static/css/styles.css" rel="stylesheet" />
+        <link href="/static/css/styles.css?v=4" rel="stylesheet" />
       </head>
       <body class={bodyClass || ''}>
         {/* Menu hamburger */}

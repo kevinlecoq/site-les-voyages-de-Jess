@@ -270,17 +270,18 @@ p {
 /* Optimisation mobile : réduire la hauteur hero pour éviter le crop latéral */
 @media (max-width: 767px) {
   .hero {
-    min-height: 45vh;
-    background-position: center 35%;
-    padding: 3rem 1.5rem;
+    min-height: 40vh !important;
+    background-position: center center !important;
+    background-size: cover !important;
+    padding: 2.5rem 1.5rem !important;
   }
   
   .hero-title {
-    font-size: 2rem;
+    font-size: 1.8rem !important;
   }
   
   .hero-subtitle {
-    font-size: 1.1rem;
+    font-size: 1rem !important;
   }
 }
 
