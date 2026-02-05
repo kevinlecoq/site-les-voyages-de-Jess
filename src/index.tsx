@@ -856,7 +856,7 @@ app.get('/mes-formules', async (c) => {
 
       <section class="section section-warm">
         <div style={{maxWidth: '800px', margin: '0 auto', textAlign: 'center'}}>
-          <h2 class="section-title">Besoin de quelque chose de différent?</h2>
+          <h2 class="section-title" style={{color: 'var(--color-text-primary)'}}>Besoin de quelque chose de différent?</h2>
           <p style={{fontSize: '1.1rem', marginBottom: '2rem'}}>
             Chaque voyage est unique. Si aucune formule ne correspond exactement à vos besoins,
             contactez-moi pour un devis personnalisé.
@@ -953,7 +953,7 @@ app.get('/voyage-sur-mesure', (c) => {
       </section>
 
       <section class="section section-warm" style={{textAlign: 'center'}}>
-        <h2 class="section-title">Prêt à commencer?</h2>
+        <h2 class="section-title" style={{color: 'var(--color-text-primary)'}}>Prêt à commencer?</h2>
         <p style={{fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto 2rem'}}>
           Remplissez le formulaire de demande et je vous recontacte rapidement pour 
           commencer à planifier votre voyage de rêve.
