@@ -324,6 +324,7 @@ p {
   
   .hero-voyage-sur-mesure {
     background-image: url('/static/images/hero-voyage-sur-mesure-1200.webp?v=3');
+    background-position: center 60%; /* Voir plus les rochers, moins le ciel */
   }
   
   .hero-formules {
@@ -333,6 +334,7 @@ p {
   
   .hero-destinations {
     background-image: url('/static/images/hero-destinations-1200.webp');
+    background-position: center 60%; /* Voir plus le lac/désert, moins le ciel */
   }
   
   .hero-faq {
