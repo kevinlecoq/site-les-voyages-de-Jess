@@ -328,6 +328,7 @@ p {
   
   .hero-formules {
     background-image: url('/static/images/hero-formules-1200.webp');
+    background-position: center 60%; /* Voir plus le lac, moins le ciel */
   }
   
   .hero-destinations {
