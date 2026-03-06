@@ -496,7 +496,7 @@ p {
 }
 
 .btn-primary {
-  background-color: var(--color-primary);
+  background-color: #6B9080; /* Vert sauge plus foncé, comme le chatbot */
   color: white;
 }
 
