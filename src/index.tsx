@@ -324,6 +324,103 @@ app.post('/api/contact', async (c) => {
 
 
 // ============================================
+// API CHATBOT - Fonction helper pour RAG
+// ============================================
+
+/**
+ * Récupère les connaissances du chatbot depuis la base de données
+ * et les formate pour injection dans le prompt
+ */
+async function getChatbotKnowledge(db: D1Database): Promise<string> {
+  try {
+    const knowledge = await db.prepare(
+      'SELECT category, key, value FROM chatbot_knowledge WHERE active = 1 ORDER BY priority DESC, category ASC'
+    ).all()
+
+    if (!knowledge.results || knowledge.results.length === 0) {
+      return '' // Pas de connaissances = fallback sur prompt de base
+    }
+
+    // Organiser par catégorie
+    const byCategory: Record<string, Array<{key: string, value: string}>> = {}
+    
+    knowledge.results.forEach((row: any) => {
+      if (!byCategory[row.category]) {
+        byCategory[row.category] = []
+      }
+      byCategory[row.category].push({ key: row.key, value: row.value })
+    })
+
+    // Formater pour le prompt
+    let knowledgeText = '\n\n📚 INFORMATIONS OFFICIELLES DU SITE (à utiliser en priorité):\n\n'
+
+    // CONTACT
+    if (byCategory.contact) {
+      knowledgeText += '📧 CONTACT:\n'
+      byCategory.contact.forEach(item => {
+        if (item.key === 'email') knowledgeText += `- Email: ${item.value}\n`
+        if (item.key === 'delai_reponse') knowledgeText += `- Délai de réponse: ${item.value}\n`
+        if (item.key === 'formulaire_page') knowledgeText += `- Formulaire de contact: Sur la page ${item.value}\n`
+        if (item.key === 'telephone') knowledgeText += `- Téléphone: ${item.value}\n`
+        if (item.key === 'instagram') knowledgeText += `- Instagram: ${item.value}\n`
+      })
+      knowledgeText += '\n'
+    }
+
+    // PAGES DU SITE
+    if (byCategory.pages) {
+      knowledgeText += '🌐 PAGES DU SITE (pour rediriger les utilisateurs):\n'
+      byCategory.pages.forEach(item => {
+        knowledgeText += `- ${item.key.replace(/_/g, ' ')}: ${item.value}\n`
+      })
+      knowledgeText += '\n'
+    }
+
+    // FORMULES
+    if (byCategory.formules) {
+      knowledgeText += '💼 FORMULES:\n'
+      byCategory.formules.forEach(item => {
+        knowledgeText += `- ${item.key.replace(/_/g, ' ')}: ${item.value}\n`
+      })
+      knowledgeText += '\n'
+    }
+
+    // TARIFS
+    if (byCategory.tarifs) {
+      knowledgeText += '💰 TARIFS:\n'
+      byCategory.tarifs.forEach(item => {
+        knowledgeText += `- ${item.key.replace(/_/g, ' ')}: ${item.value}\n`
+      })
+      knowledgeText += '\n'
+    }
+
+    // GÉNÉRAL
+    if (byCategory.general) {
+      knowledgeText += '🎯 CONTEXTE GÉNÉRAL:\n'
+      byCategory.general.forEach(item => {
+        knowledgeText += `- ${item.key.replace(/_/g, ' ')}: ${item.value}\n`
+      })
+      knowledgeText += '\n'
+    }
+
+    // PROCESSUS
+    if (byCategory.processus) {
+      knowledgeText += '📋 PROCESSUS DE RÉSERVATION:\n'
+      byCategory.processus.forEach(item => {
+        knowledgeText += `- ${item.key}: ${item.value}\n`
+      })
+      knowledgeText += '\n'
+    }
+
+    return knowledgeText
+
+  } catch (error) {
+    console.error('Erreur récupération connaissances chatbot:', error)
+    return '' // En cas d'erreur, continuer sans RAG
+  }
+}
+
+// ============================================
 // API CHATBOT
 // ============================================
 
@@ -332,6 +429,9 @@ app.post('/api/chat', async (c) => {
   try {
     // Récupère l'historique envoyé par le frontend
     const { message, history = [] } = await c.req.json()
+    
+    // Récupérer les connaissances depuis la base de données (RAG)
+    const knowledgeContext = await getChatbotKnowledge(c.env.db)
     
     // Initialise le client Anthropic avec la clé API
     const anthropic = new Anthropic({
@@ -354,8 +454,31 @@ app.post('/api/chat', async (c) => {
       messages: messages,
       system: `Tu es un assistant de voyage expert pour 'Les Voyages de Jess'.
 
+🌐 CONTEXTE IMPORTANT:
+Tu es **intégré directement sur le site web** lesvoyagesdejess.com.
+Les utilisateurs sont DÉJÀ sur le site quand ils te parlent.
+Ne leur dis JAMAIS d'aller sur le site - ils y sont déjà !
+
+${knowledgeContext}
+
+⚠️ RÈGLES CRITIQUES POUR LES INFORMATIONS DE CONTACT:
+1. UTILISE UNIQUEMENT les informations de la section "INFORMATIONS OFFICIELLES" ci-dessus
+2. N'INVENTE JAMAIS de numéro de téléphone, adresse ou autre contact
+3. Si on te demande un numéro de téléphone et qu'il n'y en a pas → dis que Jessica préfère le contact par email/formulaire
+4. Pour rediriger vers une page → utilise les chemins de la section "PAGES DU SITE" (ex: "Vous pouvez remplir le formulaire sur cette page" si on est sur /contact)
+5. Sois conscient que l'utilisateur est DÉJÀ sur le site web
+
 TON RÔLE :
-Inspirer et conseiller, MAIS pas remplacer Jess.
+Tu es l'assistant virtuel de Jessica sur SON site web.
+Ton objectif: inspirer, conseiller et orienter vers Jessica.
+JAMAIS remplacer Jessica - tu es son aide, pas son remplaçant.
+
+🎯 COMMENT REDIRIGER INTELLIGEMMENT:
+- Si l'utilisateur veut "parler à Jessica" → suggère le formulaire de contact (il est sur le site !)
+- Si l'utilisateur demande "comment contacter" → donne l'email ET mentionne le formulaire
+- Si l'utilisateur veut des infos sur les formules → suggère d'aller sur /mes-formules
+- Utilise des phrases comme: "Vous pouvez...", "Je vous invite à...", "Remplissez le formulaire ci-dessous..."
+- ÉVITE: "Allez sur le site", "Visitez lesvoyagesdejess.com" (ils y sont déjà!)
 
 ⚠️⚠️⚠️ RÈGLE ABSOLUE CRITIQUE ⚠️⚠️⚠️
 TU NE PEUX SUGGÉRER **QUE** LES PAYS DE CETTE LISTE.
@@ -390,7 +513,8 @@ RÈGLES IMPORTANTES:
 2. Partage ton enthousiasme pour les destinations
 3. Ne donne JAMAIS d'itinéraires détaillés complets
 4. Ne donne JAMAIS de listes d'activités spécifiques ni de noms de lieux précis
-5. TOUJOURS conclure en invitant à contacter Jess
+5. TOUJOURS conclure en invitant à contacter Jessica (utilise les infos de la section CONTACT ci-dessus)
+6. Adapte ta réponse au CONTEXTE: l'utilisateur est sur le site, pas ailleurs !
 
 6. ⚠️ SI LA DESTINATION DEMANDÉE N'EST PAS DANS LA LISTE:
 
@@ -409,35 +533,30 @@ RÈGLES IMPORTANTES:
    
    ÉTAPE 5: Si tu n'es PAS CERTAIN à 100% → Ne suggère QUE 2 pays au lieu de 3
 
-7. EXEMPLES OBLIGATOIRES À SUIVRE:
+7. EXEMPLES DE RÉPONSES CONTEXTUELLES:
 
-   ❓ Zimbabwe / Namibie / Tanzanie / Afrique du Sud / Kenya / Botswana
-   ✅ "Malheureusement, Jess ne propose pas de services en Afrique pour le moment. Si vous recherchez nature et aventure, voici des destinations couvertes:
+   ❓ "Je veux parler à Jessica"
+   ✅ "Parfait ! Vous pouvez contacter Jessica directement via le formulaire de contact sur cette page, ou par email à contact@lesvoyagesdejess.com. Elle vous répondra sous 48h ! 😊"
+
+   ❓ "Comment je fais pour réserver ?"
+   ✅ "Pour créer votre voyage sur mesure avec Jessica, remplissez le formulaire de demande (accessible via le menu). Jessica vous contactera sous 48h pour un appel découverte gratuit ! 😊"
+
+   ❓ "Quel est le numéro de téléphone ?"
+   ✅ "Jessica privilégie le contact par email (contact@lesvoyagesdejess.com) et le formulaire de contact pour mieux comprendre votre projet. Elle vous répondra sous 48h ! 😊"
+
+   ❓ Zimbabwe / Namibie / Afrique
+   ✅ "Malheureusement, Jessica ne propose pas de services en Afrique pour le moment. Si vous recherchez nature et aventure, voici des destinations qu'elle couvre:
    - Costa Rica: Nature luxuriante et biodiversité
    - Norvège: Paysages grandioses et fjords
    - Pérou: Diversité naturelle et culture andine
-   Je vous invite à contacter Jess ! 😊"
+   Consultez la page /destinations pour voir toutes les options, ou contactez Jessica via le formulaire ! 😊"
 
-   ❓ Japon / Chine / Vietnam / Corée
-   ✅ "Malheureusement, Jess ne propose pas de services pour ce pays. Pour une immersion asiatique:
+   ❓ Japon / Chine / Vietnam
+   ✅ "Jessica ne couvre pas ce pays actuellement. Pour une immersion asiatique, elle peut vous aider avec:
    - Thaïlande: Culture vibrante et hospitalité
    - Indonésie (Bali): Spiritualité et traditions
    - Cambodge: Patrimoine historique exceptionnel
-   Je vous invite à contacter Jess ! 😊"
-
-   ❓ Australie / Nouvelle-Zélande
-   ✅ "Malheureusement, Jess ne propose pas de services en Océanie. Pour nature et aventure:
-   - Costa Rica: Biodiversité unique
-   - Canada: Immensité naturelle
-   - Norvège: Beautés sauvages
-   Je vous invite à contacter Jess ! 😊"
-
-   ❓ Islande
-   ✅ "Malheureusement, Jess ne propose pas de services pour l'Islande. Pour des paysages nordiques:
-   - Norvège: Fjords et aurores boréales
-   - Finlande: Nature préservée scandinave
-   - Canada: Grands espaces nordiques
-   Je vous invite à contacter Jess ! 😊"
+   Consultez /destinations pour la liste complète ! 😊"
 
 🎯 VÉRIFICATION AVANT CHAQUE RÉPONSE:
 Avant de suggérer un pays, pose-toi ces 3 questions:
