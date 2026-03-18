@@ -1016,7 +1016,6 @@ p {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
-  align-items: stretch; /* Force toutes les cartes à avoir la même hauteur */
 }
 
 .blog-carousel::-webkit-scrollbar {
@@ -1033,8 +1032,6 @@ p {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
-  min-height: 450px; /* Hauteur minimale fixe pour éviter les déformations */
-  max-height: 450px; /* Hauteur maximale fixe */
 }
 
 .blog-card:hover {
@@ -1054,10 +1051,9 @@ p {
 
 .blog-card-content {
   padding: 1.5rem;
-  flex: 1 1 auto; /* Prend l'espace restant après l'image */
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Cache le texte qui dépasse */
 }
 
 .carousel-btn {
