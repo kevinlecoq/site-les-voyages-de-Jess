@@ -1039,7 +1039,9 @@ p {
 
 .blog-card-image {
   width: 100%;
-  height: 200px;
+  height: 250px;
+  object-fit: cover;
+  object-position: center;
   background-size: cover;
   background-position: center;
 }
@@ -1545,5 +1547,47 @@ p {
   object-fit: cover;
   object-position: center;
   border-radius: 8px;
+}
+
+/* ============================================
+   LISTE BLOG - GRILLE
+   ============================================ */
+
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.blog-content {
+  padding: 1.5rem;
+}
+
+.blog-date {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.blog-title {
+  color: var(--color-primary);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-family: 'Brittany Signature', cursive;
+}
+
+.blog-excerpt {
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+/* Responsive blog grid */
+@media (max-width: 768px) {
+  .blog-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
 }
 

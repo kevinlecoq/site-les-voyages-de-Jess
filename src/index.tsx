@@ -1300,37 +1300,144 @@ app.get('/blog', async (c) => {
       </section>
 
       <section class="section">
-        {posts.results.length === 0 ? (
-          <div style={{textAlign: 'center', padding: '3rem'}}>
-            <i class="fas fa-book-open" style={{fontSize: '4rem', color: 'var(--color-text-secondary)', marginBottom: '1rem'}}></i>
-            <h2>Bientôt disponible</h2>
-            <p style={{color: 'var(--color-text-secondary)'}}>
-              Les premiers articles arrivent bientôt! Revenez régulièrement pour découvrir 
-              mes récits de voyage et mes meilleurs conseils.
-            </p>
-          </div>
-        ) : (
-          <div class="blog-grid">
-            {posts.results.map((post: any) => (
-              <article class="blog-card">
-                {post.featured_image && (
-                  <img src={post.featured_image} alt={post.title} class="blog-image" />
-                )}
-                <div class="blog-content">
-                  <div class="blog-date">
-                    <i class="fas fa-calendar"></i> {new Date(post.published_at).toLocaleDateString('fr-FR')}
+        {/* Container liste articles */}
+        <div id="blog-list">
+          {posts.results.length === 0 ? (
+            <div style={{textAlign: 'center', padding: '3rem'}}>
+              <i class="fas fa-book-open" style={{fontSize: '4rem', color: 'var(--color-text-secondary)', marginBottom: '1rem'}}></i>
+              <h2>Bientôt disponible</h2>
+              <p style={{color: 'var(--color-text-secondary)'}}>
+                Les premiers articles arrivent bientôt! Revenez régulièrement pour découvrir 
+                mes récits de voyage et mes meilleurs conseils.
+              </p>
+            </div>
+          ) : (
+            <div class="blog-grid">
+              {posts.results.map((post: any) => (
+                <article class="blog-card">
+                  {post.featured_image && (
+                    <img src={post.featured_image} alt={post.title} class="blog-image" />
+                  )}
+                  <div class="blog-content">
+                    <div class="blog-date">
+                      <i class="fas fa-calendar"></i> {new Date(post.published_at).toLocaleDateString('fr-FR')}
+                    </div>
+                    <h3 class="blog-title">{post.title}</h3>
+                    <p class="blog-excerpt">{post.excerpt}</p>
+                    <button onclick={`showBlogArticle('${post.slug}')`} class="btn btn-outline" style={{border: 'none', background: 'transparent', color: 'var(--color-primary)', padding: 0}}>
+                      <span class="btn btn-outline">Lire la suite <i class="fas fa-arrow-right"></i></span>
+                    </button>
                   </div>
-                  <h3 class="blog-title">{post.title}</h3>
-                  <p class="blog-excerpt">{post.excerpt}</p>
-                  <a href={`/blog/${post.slug}`} class="btn btn-outline">
-                    Lire la suite <i class="fas fa-arrow-right"></i>
-                  </a>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Container article individuel (masqué par défaut) */}
+        <div id="blog-article" style={{display: 'none'}}>
+          {/* Contenu chargé dynamiquement */}
+        </div>
       </section>
+
+      {/* Script de navigation dynamique */}
+      <script dangerouslySetInnerHTML={{__html: `
+        async function showBlogArticle(slug) {
+          const blogList = document.getElementById('blog-list');
+          const blogArticle = document.getElementById('blog-article');
+          
+          // Masquer la liste
+          blogList.style.opacity = '0';
+          blogList.style.transition = 'opacity 0.3s ease';
+          
+          setTimeout(async () => {
+            blogList.style.display = 'none';
+            
+            // Charger l'article
+            try {
+              const response = await fetch('/api/blog/' + slug);
+              const data = await response.json();
+              
+              if (data.success) {
+                const post = data.post;
+                const publishedDate = new Date(post.published_at || post.created_at).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+                
+                let headerHTML = '';
+                if (post.featured_image) {
+                  headerHTML = \`
+                    <div style="min-height: 400px; background-image: url(\${post.featured_image}); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; position: relative; border-radius: 8px; overflow: hidden; margin-bottom: 2rem;">
+                      <div style="background: rgba(0,0,0,0.65); position: absolute; top: 0; left: 0; right: 0; bottom: 0;"></div>
+                      <div style="position: relative; z-index: 2; text-align: center; color: white; padding: 2rem;">
+                        <h1 style="font-size: 3rem; margin-bottom: 1rem; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">\${post.title}</h1>
+                        <p style="font-size: 1.2rem; color: white; font-weight: 500; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">
+                          <i class="fas fa-calendar"></i> \${publishedDate}
+                        </p>
+                      </div>
+                    </div>
+                  \`;
+                } else {
+                  headerHTML = \`
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                      <h1 style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--color-primary);">\${post.title}</h1>
+                      <p style="font-size: 1.1rem; color: var(--color-text-secondary);">
+                        <i class="fas fa-calendar"></i> \${publishedDate}
+                      </p>
+                    </div>
+                  \`;
+                }
+                
+                blogArticle.innerHTML = \`
+                  <div style="max-width: 800px; margin: 0 auto;">
+                    \${headerHTML}
+                    <article style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+                      <div style="font-size: 1.1rem; line-height: 1.8; color: var(--color-text-primary);">\${post.content.replace(/\\n/g, '<br />')}</div>
+                    </article>
+                    <div style="text-align: center;">
+                      <button onclick="showBlogList()" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Retour au blog
+                      </button>
+                    </div>
+                  </div>
+                \`;
+                
+                // Afficher l'article
+                blogArticle.style.display = 'block';
+                blogArticle.style.opacity = '0';
+                blogArticle.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => {
+                  blogArticle.style.opacity = '1';
+                  // Scroll vers le haut de la section
+                  document.querySelector('.section').scrollIntoView({ behavior: 'smooth' });
+                }, 50);
+              }
+            } catch (error) {
+              console.error('Erreur chargement article:', error);
+              blogArticle.innerHTML = '<div style="text-align: center; padding: 2rem;"><p>Erreur de chargement de l\'article.</p></div>';
+              blogArticle.style.display = 'block';
+            }
+          }, 300);
+        }
+        
+        function showBlogList() {
+          const blogList = document.getElementById('blog-list');
+          const blogArticle = document.getElementById('blog-article');
+          
+          // Masquer l'article
+          blogArticle.style.opacity = '0';
+          
+          setTimeout(() => {
+            blogArticle.style.display = 'none';
+            
+            // Afficher la liste
+            blogList.style.display = 'block';
+            setTimeout(() => {
+              blogList.style.opacity = '1';
+              // Scroll vers le haut de la section
+              document.querySelector('.hero-blog').scrollIntoView({ behavior: 'smooth' });
+            }, 50);
+          }, 300);
+        }
+      `}} />
     </>,
     { title: 'Blog - Les Voyages de Jess' }
   )
@@ -2623,6 +2730,25 @@ app.get('/r2/*', async (c) => {
   }
 })
 
+// Route API pour récupérer un article en JSON (pour navigation dynamique)
+app.get('/api/blog/:slug', async (c) => {
+  const slug = c.req.param('slug')
+  
+  const post = await c.env.db
+    .prepare('SELECT * FROM blog_posts WHERE slug = ? AND published = 1')
+    .bind(slug)
+    .first()
+  
+  if (!post) {
+    return c.json({ success: false, error: 'Article non trouvé' }, 404)
+  }
+  
+  return c.json({ 
+    success: true, 
+    post: post
+  })
+})
+
 // Route article individuel
 app.get('/blog/:slug', async (c) => {
   const slug = c.req.param('slug')
@@ -2649,10 +2775,10 @@ app.get('/blog/:slug', async (c) => {
           justifyContent: 'center',
           position: 'relative'
         }}>
-          <div style={{background: 'rgba(0,0,0,0.5)', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}></div>
+          <div style={{background: 'rgba(0,0,0,0.65)', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}></div>
           <div style={{position: 'relative', zIndex: 2, textAlign: 'center', color: 'white', padding: '2rem'}}>
-            <h1 style={{fontSize: '3rem', marginBottom: '1rem'}}>{post.title}</h1>
-            <p style={{fontSize: '1.2rem'}}>
+            <h1 style={{fontSize: '3rem', marginBottom: '1rem', color: 'white', textShadow: '2px 2px 4px rgba(0,0,0,0.5)'}}>{post.title}</h1>
+            <p style={{fontSize: '1.2rem', color: 'white', fontWeight: '500', textShadow: '1px 1px 3px rgba(0,0,0,0.5)'}}>
               <i class="fas fa-calendar"></i> {new Date(post.published_at || post.created_at).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
