@@ -2697,12 +2697,13 @@ app.post('/admin/blog', async (c) => {
   const excerpt = (body.excerpt as string) || ''
   const content = body.content as string
   const published = body.published === '1' ? 1 : 0
-  
+  const featured_image = (body.featured_image_url as string) || null
+
   try {
     await c.env.db
       .prepare(`
-        INSERT INTO blog_posts (title, slug, excerpt, content, published, published_at, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO blog_posts (title, slug, excerpt, content, published, published_at, created_at, featured_image)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .bind(
         title,
@@ -2712,6 +2713,8 @@ app.post('/admin/blog', async (c) => {
         published,
         published ? new Date().toISOString() : null,
         new Date().toISOString()
+        ,
+        featured_image
       )
       .run()
     
