@@ -1452,3 +1452,75 @@ p {
   }
 }
 
+
+/* Section Citation élégante - Page d'accueil */
+.quote-card-section {
+  padding: 4rem 1.5rem;
+  background: linear-gradient(to bottom, #ffffff 0%, #f8faf9 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.quote-card {
+  max-width: 800px;
+  width: 100%;
+  background: white;
+  border-radius: 16px;
+  padding: 3rem 2.5rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+  text-align: center;
+  border: 1px solid rgba(146, 181, 168, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.quote-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 50px rgba(0,0,0,0.12);
+}
+
+.quote-card blockquote {
+  margin: 0 0 2rem 0;
+  padding: 0;
+  border-left: none;
+}
+
+.quote-card blockquote p {
+  font-size: 1.8rem;
+  line-height: 1.6;
+  color: #2c3e50;
+  font-family: 'Alice', serif;
+  font-style: italic;
+  font-weight: 400;
+  margin: 0;
+}
+
+.quote-card-divider {
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(to right, transparent, #92B5A8, transparent);
+  margin: 2rem auto;
+}
+
+/* Responsive mobile pour la carte citation */
+@media (max-width: 767px) {
+  .quote-card-section {
+    padding: 3rem 1rem;
+  }
+  
+  .quote-card {
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+  }
+  
+  .quote-card blockquote p {
+    font-size: 1.3rem;
+    line-height: 1.5;
+  }
+  
+  .quote-card-divider {
+    width: 40px;
+    height: 2px;
+    margin: 1.5rem auto;
+  }
+}
