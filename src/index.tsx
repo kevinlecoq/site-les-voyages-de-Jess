@@ -1293,7 +1293,7 @@ app.get('/blog', async (c) => {
                     </div>
                     <h3 class="blog-title">{post.title}</h3>
                     <p class="blog-excerpt">{post.excerpt}</p>
-                    <button onclick={`showBlogArticle('${post.slug}')`} class="btn btn-outline" style={{cursor: 'pointer'}}>
+                    <button class="btn btn-outline blog-read-more" data-slug={post.slug} style={{cursor: 'pointer'}}>
                       Lire la suite <i class="fas fa-arrow-right"></i>
                     </button>
                   </div>
@@ -1322,6 +1322,17 @@ app.get('/blog', async (c) => {
             // Nettoyer l'URL sans recharger la page
             window.history.replaceState({}, '', '/blog');
           }
+          
+          // Ajouter les event listeners sur les boutons "Lire la suite"
+          document.querySelectorAll('.blog-read-more').forEach(button => {
+            button.addEventListener('click', (e) => {
+              e.preventDefault();
+              const slug = button.getAttribute('data-slug');
+              if (slug) {
+                showBlogArticle(slug);
+              }
+            });
+          });
         });
         
         async function showBlogArticle(slug) {
