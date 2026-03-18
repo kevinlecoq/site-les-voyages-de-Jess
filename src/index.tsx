@@ -615,7 +615,7 @@ app.get('/', async (c) => {
 </section>
 
 {/* Section Citation élégante */}
-<section style={{padding: '4rem 1.5rem', background: 'linear-gradient(to bottom, #ffffff 0%, #f8faf9 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+<section style={{padding: '4rem 1.5rem', background: '#F2E6D9', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
   <div style={{maxWidth: '800px', width: '100%', background: 'white', borderRadius: '16px', padding: '3rem 2.5rem', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', textAlign: 'center', border: '1px solid rgba(146, 181, 168, 0.1)'}}>
     <blockquote style={{margin: '0 0 2rem 0', padding: 0, borderLeft: 'none'}}>
       <p style={{fontSize: '1.8rem', lineHeight: 1.6, color: '#2c3e50', fontFamily: "'Alice', serif", fontStyle: 'italic', fontWeight: 400, margin: 0}}>
