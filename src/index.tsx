@@ -770,7 +770,7 @@ app.get('/', async (c) => {
                         <p style={{lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '1.5rem'}}>
                           {post.excerpt}
                         </p>
-                        <a href={`/blog/${post.slug}`} class="btn btn-secondary btn-sm">
+                        <a href={`/blog?article=${post.slug}`} class="btn btn-secondary btn-sm">
                           <i class="fas fa-book-open"></i> Lire l'article
                         </a>
                       </div>
@@ -1311,6 +1311,19 @@ app.get('/blog', async (c) => {
 
       {/* Script de navigation dynamique */}
       <script dangerouslySetInnerHTML={{__html: `
+        // Détecter si on arrive avec ?article=slug
+        window.addEventListener('DOMContentLoaded', () => {
+          const urlParams = new URLSearchParams(window.location.search);
+          const articleSlug = urlParams.get('article');
+          
+          if (articleSlug) {
+            // Ouvrir automatiquement l'article
+            showBlogArticle(articleSlug);
+            // Nettoyer l'URL sans recharger la page
+            window.history.replaceState({}, '', '/blog');
+          }
+        });
+        
         async function showBlogArticle(slug) {
           const blogList = document.getElementById('blog-list');
           const blogArticle = document.getElementById('blog-article');
@@ -1390,6 +1403,9 @@ app.get('/blog', async (c) => {
         function showBlogList() {
           const blogList = document.getElementById('blog-list');
           const blogArticle = document.getElementById('blog-article');
+          
+          // Nettoyer l'URL
+          window.history.pushState({}, '', '/blog');
           
           // Masquer l'article
           blogArticle.style.opacity = '0';
@@ -2719,9 +2735,11 @@ app.get('/api/blog/:slug', async (c) => {
 })
 
 // Route article individuel
+// Route article individuel - Redirige vers /blog avec paramètre
 app.get('/blog/:slug', async (c) => {
   const slug = c.req.param('slug')
   
+  // Vérifier que l'article existe
   const post = await c.env.db
     .prepare('SELECT * FROM blog_posts WHERE slug = ? AND published = 1')
     .bind(slug)
@@ -2731,57 +2749,8 @@ app.get('/blog/:slug', async (c) => {
     return c.notFound()
   }
   
-  return c.render(
-    <>
-      {post.featured_image ? (
-        <section style={{
-          minHeight: '400px',
-          backgroundImage: `url(${post.featured_image})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative'
-        }}>
-          <div style={{background: 'rgba(0,0,0,0.65)', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}></div>
-          <div style={{position: 'relative', zIndex: 2, textAlign: 'center', color: 'white', padding: '2rem'}}>
-            <h1 style={{fontSize: '3rem', marginBottom: '1rem', color: 'white', textShadow: '2px 2px 4px rgba(0,0,0,0.5)'}}>{post.title}</h1>
-            <p style={{fontSize: '1.2rem', color: 'white', fontWeight: '500', textShadow: '1px 1px 3px rgba(0,0,0,0.5)'}}>
-              <i class="fas fa-calendar"></i> {new Date(post.published_at || post.created_at).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
-          </div>
-        </section>
-      ) : (
-        <section class="hero hero-blog">
-          <div style={{position: 'relative', zIndex: 2}}>
-            <h1 class="hero-title">{post.title}</h1>
-            <p class="hero-subtitle">
-              <i class="fas fa-calendar"></i> {new Date(post.published_at || post.created_at).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
-          </div>
-        </section>
-      )}
-      
-      <section class="section">
-        <div style={{maxWidth: '800px', margin: '0 auto'}}>
-          <article style={{background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
-            <div style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-primary)'}} dangerouslySetInnerHTML={{__html: post.content.replace(/\n/g, '<br />')}} />
-          </article>
-          
-          <div style={{marginTop: '2rem', textAlign: 'center'}}>
-            <a href="/blog" class="btn btn-secondary">
-              <i class="fas fa-arrow-left"></i> Retour au blog
-            </a>
-          </div>
-        </div>
-      </section>
-    </>,
-    { 
-      title: `${post.title} - Blog Les Voyages de Jess`,
-      bodyClass: 'blog-article'
-    }
-  )
+  // Rediriger vers /blog avec le paramètre article
+  return c.redirect(`/blog?article=${slug}`)
 })
 
 app.post('/admin/blog', async (c) => {
