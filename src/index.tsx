@@ -2363,6 +2363,7 @@ app.get('/admin/blog', async (c) => {
   )
 })
 // Formulaire de création d'article
+// Formulaire de création d'article
 app.get('/admin/blog/new', (c) => {
   return c.render(
     <>
@@ -2375,29 +2376,56 @@ app.get('/admin/blog/new', (c) => {
         
         <h1 style={{marginBottom: '2rem'}}>Nouvel article</h1>
         
-        <form method="POST" action="/admin/blog" style={{background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
+        <form method="POST" action="/admin/blog" enctype="multipart/form-data" style={{background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'}}>
+          
           <div class="form-group" style={{marginBottom: '1.5rem'}}>
             <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Titre *</label>
             <input 
               type="text" 
               name="title" 
+              id="blog-title"
               required 
               class="form-input"
+              placeholder="Ex: Mon voyage en Italie"
               style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem'}}
             />
           </div>
           
+          <input type="hidden" name="slug" id="blog-slug" />
+          <div style={{marginBottom: '1.5rem', padding: '0.75rem', background: '#f0f9ff', borderRadius: '4px', border: '1px solid #bfdbfe'}}>
+            <small style={{color: '#1e40af'}}>
+              <i class="fas fa-link"></i> URL de l'article : <span style={{fontWeight: 600}}>/blog/<span id="slug-preview">mon-article</span></span>
+            </small>
+          </div>
+          
           <div class="form-group" style={{marginBottom: '1.5rem'}}>
-            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Slug (URL) *</label>
-            <input 
-              type="text" 
-              name="slug" 
-              required 
-              class="form-input"
-              placeholder="mon-voyage-en-italie"
-              style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem'}}
-            />
-            <small style={{color: 'var(--color-text-secondary)'}}>L'URL de l'article : /blog/mon-voyage-en-italie</small>
+            <label class="form-label" style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>
+              <i class="fas fa-image"></i> Image à la une
+            </label>
+            <div style={{border: '2px dashed #ddd', borderRadius: '8px', padding: '2rem', textAlign: 'center', background: '#fafafa'}}>
+              <input 
+                type="file" 
+                name="featured_image" 
+                id="featured-image-input"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                style={{display: 'none'}}
+              />
+              <div id="featured-image-preview" style={{display: 'none', marginBottom: '1rem'}}>
+                <img id="featured-image-img" src="" alt="Aperçu" style={{maxWidth: '100%', maxHeight: '300px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}} />
+              </div>
+              <button 
+                type="button" 
+                id="upload-featured-btn"
+                onclick="document.getElementById('featured-image-input').click()"
+                style={{padding: '0.75rem 1.5rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem'}}
+              >
+                <i class="fas fa-upload"></i> Choisir une image
+              </button>
+              <input type="hidden" name="featured_image_url" id="featured-image-url" />
+              <p style={{marginTop: '0.5rem', color: 'var(--color-text-secondary)', fontSize: '0.9rem'}}>
+                JPG, PNG ou WebP - Max 5 MB
+              </p>
+            </div>
           </div>
           
           <div class="form-group" style={{marginBottom: '1.5rem'}}>
@@ -2406,7 +2434,7 @@ app.get('/admin/blog/new', (c) => {
               name="excerpt" 
               rows="3"
               class="form-textarea"
-              placeholder="Court résumé de l'article..."
+              placeholder="Court résumé de l'article (visible sur la liste des articles)..."
               style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'inherit'}}
             ></textarea>
           </div>
@@ -2418,13 +2446,17 @@ app.get('/admin/blog/new', (c) => {
               rows="15"
               required
               class="form-textarea"
+              placeholder="Rédigez votre article ici..."
               style={{width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '1rem', fontFamily: 'inherit'}}
             ></textarea>
+            <small style={{color: 'var(--color-text-secondary)'}}>
+              💡 Astuce : Utilisez des retours à la ligne pour structurer votre texte
+            </small>
           </div>
           
           <div class="form-group" style={{marginBottom: '1.5rem'}}>
             <label style={{display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer'}}>
-              <input type="checkbox" name="published" value="1" />
+              <input type="checkbox" name="published" value="1" checked />
               <span style={{fontWeight: 600}}>Publier immédiatement</span>
             </label>
             <small style={{color: 'var(--color-text-secondary)', display: 'block', marginTop: '0.25rem'}}>
@@ -2442,6 +2474,72 @@ app.get('/admin/blog/new', (c) => {
           </div>
         </form>
       </div>
+      
+      <script dangerouslySetInnerHTML={{__html: `
+        const titleInput = document.getElementById('blog-title');
+        const slugInput = document.getElementById('blog-slug');
+        const slugPreview = document.getElementById('slug-preview');
+        
+        function generateSlug(text) {
+          return text
+            .toLowerCase()
+            .trim()
+            .normalize('NFD')
+            .replace(/[\\u0300-\\u036f]/g, '')
+            .replace(/[^a-z0-9\\s-]/g, '')
+            .replace(/\\s+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        }
+        
+        titleInput.addEventListener('input', function() {
+          const slug = generateSlug(this.value) || 'mon-article';
+          slugInput.value = slug;
+          slugPreview.textContent = slug;
+        });
+        
+        const featuredImageInput = document.getElementById('featured-image-input');
+        const featuredImagePreview = document.getElementById('featured-image-preview');
+        const featuredImageImg = document.getElementById('featured-image-img');
+        const featuredImageUrl = document.getElementById('featured-image-url');
+        const uploadBtn = document.getElementById('upload-featured-btn');
+        
+        featuredImageInput.addEventListener('change', async function() {
+          const file = this.files[0];
+          if (!file) return;
+          
+          uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Upload en cours...';
+          uploadBtn.disabled = true;
+          
+          const formData = new FormData();
+          formData.append('image', file);
+          
+          try {
+            const response = await fetch('/admin/blog/upload-image', {
+              method: 'POST',
+              body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+              featuredImageImg.src = result.url;
+              featuredImagePreview.style.display = 'block';
+              featuredImageUrl.value = result.url;
+              uploadBtn.innerHTML = '<i class="fas fa-check"></i> Image téléchargée';
+              uploadBtn.style.background = '#10b981';
+            } else {
+              alert('Erreur : ' + result.error);
+              uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Choisir une image';
+              uploadBtn.disabled = false;
+            }
+          } catch (error) {
+            alert('Erreur lors de l\\'upload : ' + error.message);
+            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Choisir une image';
+            uploadBtn.disabled = false;
+          }
+        });
+      `}} />
     </>,
     { title: 'Nouvel article - Admin' }
   )
