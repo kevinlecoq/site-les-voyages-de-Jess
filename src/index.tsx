@@ -601,6 +601,9 @@ app.get('/', async (c) => {
   
   // Récupérer les formules
   const packages = await c.env.db.prepare('SELECT * FROM travel_packages ORDER BY sort_order ASC').all();
+  
+  // Récupérer les derniers articles de blog (max 4)
+  const blogPosts = await c.env.db.prepare('SELECT * FROM blog_posts WHERE published = 1 ORDER BY published_at DESC LIMIT 4').all();
 
  return c.render(
   <>
@@ -743,93 +746,59 @@ app.get('/', async (c) => {
         <div style={{maxWidth: '1200px', margin: '0 auto'}}>
           <h2 class="section-title" style={{textAlign: 'center', marginBottom: '3rem'}}>Articles récents</h2>
           
-          {/* Carousel container */}
-          <div class="blog-carousel-container">
-            <button class="carousel-btn carousel-btn-prev" onclick="scrollBlogCarousel(-1)">
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            
-            <div class="blog-carousel">
-              {/* Article exemple 1 */}
-              <div class="blog-card">
-                <div class="blog-card-image" style={{backgroundImage: "url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600')"}}></div>
-                <div class="blog-card-content">
-                  <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>10 destinations incontournables en 2026</h3>
-                  <p class="blog-card-date" style={{color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem'}}>
-                    <i class="far fa-calendar"></i> Février 2026
-                  </p>
-                  <p style={{lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '1.5rem'}}>
-                    Découvrez mes coups de cœur pour vos prochaines aventures. Des destinations authentiques qui vous feront vivre des expériences inoubliables...
-                  </p>
-                  <a href="/blog" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-book-open"></i> Lire l'article
-                  </a>
+          {blogPosts.results.length > 0 ? (
+            <>
+              {/* Carousel container */}
+              <div class="blog-carousel-container">
+                <button class="carousel-btn carousel-btn-prev" onclick="scrollBlogCarousel(-1)">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                
+                <div class="blog-carousel">
+                  {blogPosts.results.map((post: any) => (
+                    <div class="blog-card">
+                      {post.featured_image ? (
+                        <div class="blog-card-image" style={{backgroundImage: `url(${post.featured_image})`}}></div>
+                      ) : (
+                        <div class="blog-card-image" style={{backgroundImage: "url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600')"}}></div>
+                      )}
+                      <div class="blog-card-content">
+                        <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>{post.title}</h3>
+                        <p class="blog-card-date" style={{color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem'}}>
+                          <i class="far fa-calendar"></i> {new Date(post.published_at).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' })}
+                        </p>
+                        <p style={{lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '1.5rem'}}>
+                          {post.excerpt}
+                        </p>
+                        <a href={`/blog/${post.slug}`} class="btn btn-secondary btn-sm">
+                          <i class="fas fa-book-open"></i> Lire l'article
+                        </a>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+
+                <button class="carousel-btn carousel-btn-next" onclick="scrollBlogCarousel(1)">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
               </div>
 
-              {/* Article exemple 2 */}
-              <div class="blog-card">
-                <div class="blog-card-image" style={{backgroundImage: "url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600')"}}></div>
-                <div class="blog-card-content">
-                  <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>Comment préparer son voyage en 5 étapes</h3>
-                  <p class="blog-card-date" style={{color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem'}}>
-                    <i class="far fa-calendar"></i> Février 2026
-                  </p>
-                  <p style={{lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '1.5rem'}}>
-                    Les conseils essentiels pour un voyage réussi. De la planification à la réservation, découvrez mes astuces de professionnelle...
-                  </p>
-                  <a href="/blog" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-book-open"></i> Lire l'article
-                  </a>
-                </div>
+              {/* Bouton vers le blog */}
+              <div style={{textAlign: 'center', marginTop: '3rem'}}>
+                <a href="/blog" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
+                  <i class="fas fa-newspaper"></i> Découvrir le blog
+                </a>
               </div>
-
-              {/* Article exemple 3 */}
-              <div class="blog-card">
-                <div class="blog-card-image" style={{backgroundImage: "url('https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=600')"}}></div>
-                <div class="blog-card-content">
-                  <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>Voyage en famille : mes destinations préférées</h3>
-                  <p class="blog-card-date" style={{color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem'}}>
-                    <i class="far fa-calendar"></i> Février 2026
-                  </p>
-                  <p style={{lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '1.5rem'}}>
-                    Les meilleures destinations pour voyager avec des enfants. Sécurité, activités et hébergements adaptés pour toute la famille...
-                  </p>
-                  <a href="/blog" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-book-open"></i> Lire l'article
-                  </a>
-                </div>
-              </div>
-
-              {/* Article exemple 4 */}
-              <div class="blog-card">
-                <div class="blog-card-image" style={{backgroundImage: "url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600')"}}></div>
-                <div class="blog-card-content">
-                  <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>Voyager en solo : mes meilleurs conseils</h3>
-                  <p class="blog-card-date" style={{color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem'}}>
-                    <i class="far fa-calendar"></i> Février 2026
-                  </p>
-                  <p style={{lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '1.5rem'}}>
-                    L'aventure en solo n'aura plus de secrets pour vous. Sécurité, rencontres et liberté : tout ce qu'il faut savoir...
-                  </p>
-                  <a href="/blog" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-book-open"></i> Lire l'article
-                  </a>
-                </div>
-              </div>
+            </>
+          ) : (
+            <div style={{textAlign: 'center', padding: '3rem'}}>
+              <i class="fas fa-book-open" style={{fontSize: '4rem', color: 'var(--color-text-secondary)', marginBottom: '1rem'}}></i>
+              <h3>Bientôt disponible</h3>
+              <p style={{color: 'var(--color-text-secondary)'}}>
+                Les premiers articles arrivent bientôt!
+              </p>
             </div>
-
-            <button class="carousel-btn carousel-btn-next" onclick="scrollBlogCarousel(1)">
-              <i class="fas fa-chevron-right"></i>
-            </button>
-          </div>
-
-          {/* Bouton vers le blog */}
-          <div style={{textAlign: 'center', marginTop: '3rem'}}>
-            <a href="/blog" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
-              <i class="fas fa-newspaper"></i> Découvrir le blog
-            </a>
-          </div>
+          )}
         </div>
       </section>
 
@@ -1324,8 +1293,8 @@ app.get('/blog', async (c) => {
                     </div>
                     <h3 class="blog-title">{post.title}</h3>
                     <p class="blog-excerpt">{post.excerpt}</p>
-                    <button onclick={`showBlogArticle('${post.slug}')`} class="btn btn-outline" style={{border: 'none', background: 'transparent', color: 'var(--color-primary)', padding: 0}}>
-                      <span class="btn btn-outline">Lire la suite <i class="fas fa-arrow-right"></i></span>
+                    <button onclick={`showBlogArticle('${post.slug}')`} class="btn btn-outline" style={{cursor: 'pointer'}}>
+                      Lire la suite <i class="fas fa-arrow-right"></i>
                     </button>
                   </div>
                 </article>
