@@ -1016,6 +1016,7 @@ p {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
+  align-items: flex-start; /* Empêche l'étirement vertical des cartes */
 }
 
 .blog-carousel::-webkit-scrollbar {
