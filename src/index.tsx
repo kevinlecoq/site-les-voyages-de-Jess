@@ -763,14 +763,34 @@ app.get('/', async (c) => {
                         class="blog-card-image"
                       />
                       <div class="blog-card-content">
-                        <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>{post.title}</h3>
+                        <h3 style={{
+                          color: 'var(--color-primary)', 
+                          marginBottom: '0.5rem', 
+                          fontSize: '1.3rem',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: '2',
+                          WebkitBoxOrient: 'vertical',
+                          minHeight: '2.6rem'
+                        }}>{post.title}</h3>
                         <p class="blog-card-date" style={{color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem'}}>
                           <i class="far fa-calendar"></i> {new Date(post.published_at).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' })}
                         </p>
-                        <p style={{lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '1.5rem'}}>
+                        <p style={{
+                          lineHeight: 1.6, 
+                          color: 'var(--color-text-secondary)', 
+                          marginBottom: '1.5rem',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: '3',
+                          WebkitBoxOrient: 'vertical',
+                          flexGrow: 1
+                        }}>
                           {post.excerpt}
                         </p>
-                        <a href={`/blog?article=${post.slug}`} class="btn btn-secondary btn-sm">
+                        <a href={`/blog?article=${post.slug}`} class="btn btn-secondary btn-sm" style={{marginTop: 'auto'}}>
                           <i class="fas fa-book-open"></i> Lire l'article
                         </a>
                       </div>
