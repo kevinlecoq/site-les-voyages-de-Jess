@@ -757,11 +757,11 @@ app.get('/', async (c) => {
                 <div class="blog-carousel">
                   {blogPosts.results.map((post: any) => (
                     <div class="blog-card">
-                      {post.featured_image ? (
-                        <div class="blog-card-image" style={{backgroundImage: `url(${post.featured_image})`}}></div>
-                      ) : (
-                        <div class="blog-card-image" style={{backgroundImage: "url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600')"}}></div>
-                      )}
+                      <img 
+                        src={post.featured_image || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600"}
+                        alt={post.title}
+                        class="blog-card-image"
+                      />
                       <div class="blog-card-content">
                         <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>{post.title}</h3>
                         <p class="blog-card-date" style={{color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem'}}>
