@@ -610,63 +610,21 @@ app.get('/', async (c) => {
   <div style={{background: 'rgba(0,0,0,0.2)', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1}}></div>
   <div style={{position: 'relative', zIndex: 2}}>
     <h1 class="hero-title" style={{color: 'white', fontSize: '4rem'}}>Les Voyages de Jess</h1>
-    <p class="hero-subtitle" style={{fontSize: '1.2rem', color: 'white', fontFamily: "'"'"'Alice'"'"', serif"}}>Créatrice de voyages sur mesure</p>
+    <p class="hero-subtitle" style={{fontSize: '1.2rem', color: 'white', fontFamily: "'Alice', serif"}}>Créatrice de voyages sur mesure</p>
   </div>
 </section>
 
-{/* Section Citation élégante - Nouvelle */}
-<section style={{
-  padding: '4rem 1.5rem',
-  background: 'linear-gradient(to bottom, #ffffff 0%, #f8faf9 100%)',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center'
-}}>
-  <div style={{
-    maxWidth: '800px',
-    width: '100%',
-    background: 'white',
-    borderRadius: '16px',
-    padding: '3rem 2.5rem',
-    boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
-    textAlign: 'center',
-    border: '1px solid rgba(146, 181, 168, 0.1)'
-  }}>
-    <blockquote style={{
-      margin: '0 0 2rem 0',
-      padding: 0,
-      borderLeft: 'none'
-    }}>
-      <p style={{
-        fontSize: '1.8rem',
-        lineHeight: 1.6,
-        color: '#2c3e50',
-        fontFamily: "'"'"'Alice'"'"', serif",
-        fontStyle: 'italic',
-        fontWeight: 400,
-        margin: 0
-      }}>
+{/* Section Citation élégante */}
+<section style={{padding: '4rem 1.5rem', background: 'linear-gradient(to bottom, #ffffff 0%, #f8faf9 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+  <div style={{maxWidth: '800px', width: '100%', background: 'white', borderRadius: '16px', padding: '3rem 2.5rem', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', textAlign: 'center', border: '1px solid rgba(146, 181, 168, 0.1)'}}>
+    <blockquote style={{margin: '0 0 2rem 0', padding: 0, borderLeft: 'none'}}>
+      <p style={{fontSize: '1.8rem', lineHeight: 1.6, color: '#2c3e50', fontFamily: "'Alice', serif", fontStyle: 'italic', fontWeight: 400, margin: 0}}>
         "Parce que chaque voyageur est unique, chaque voyage doit l'être aussi."
       </p>
     </blockquote>
-    
-    <div style={{
-      width: '60px',
-      height: '3px',
-      background: 'linear-gradient(to right, transparent, #92B5A8, transparent)',
-      margin: '2rem auto'
-    }}></div>
-    
+    <div style={{width: '60px', height: '3px', background: 'linear-gradient(to right, transparent, #92B5A8, transparent)', margin: '2rem auto'}}></div>
     <div style={{marginTop: '2rem'}}>
-      <a href="/contact" class="btn btn-primary" style={{
-        fontSize: '1.1rem',
-        padding: '1rem 2.5rem',
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        boxShadow: '0 4px 12px rgba(107, 144, 128, 0.3)',
-        transition: 'all 0.3s ease'
-      }}>
+      <a href="/contact" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(107, 144, 128, 0.3)', transition: 'all 0.3s ease'}}>
         <i class="fas fa-compass"></i> Je crée mon voyage
       </a>
     </div>
