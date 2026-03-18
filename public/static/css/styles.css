@@ -1044,7 +1044,7 @@ p {
   width: 100%;
   height: 350px; /* Augmenté de 250px à 350px pour voir plus de contenu */
   object-fit: cover;
-  object-position: center;
+  object-position: center 65%; /* Affiche la partie basse de l'image (paysage) au lieu du ciel */
   display: block;
   flex-shrink: 0;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
