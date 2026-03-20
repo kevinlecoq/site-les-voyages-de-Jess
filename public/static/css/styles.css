@@ -1050,7 +1050,7 @@ p {
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
-/* Nouveau style pour carousel homepage - images carrées cliquables */
+/* Nouveau style pour carousel homepage - images carrées cliquables - v2.0 FORCE UPDATE */
 .blog-card-link {
   display: block;
   flex: 0 0 calc(33.333% - 1.33rem);

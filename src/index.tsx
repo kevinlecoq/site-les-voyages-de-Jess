@@ -755,6 +755,7 @@ app.get('/', async (c) => {
                 </button>
                 
                 <div class="blog-carousel">
+                  {/* Carousel v2 - Images carrées */}
                   {blogPosts.results.map((post: any) => (
                     <a href={`/blog?article=${post.slug}`} class="blog-card-link">
                       <img 
