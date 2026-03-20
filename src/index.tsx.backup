@@ -61,7 +61,7 @@ app.use('*', async (c, next) => {
     return next()
   }
   
-  return jsxRenderer(({ children, title }) => {
+  return jsxRenderer(({ children, title, bodyClass }) => {
   return (
     <html lang="fr">
 <head>
@@ -74,17 +74,21 @@ app.use('*', async (c, next) => {
   <meta name="keywords" content="travel planner québec, planificateur voyage, voyage sur mesure, agence voyage, jessica voyage" />
   
   {/* Open Graph (Facebook, LinkedIn) */}
-  <meta property="og:title" content="Les Voyages de Jess | Planificatrice de Voyages" />
-  <meta property="og:description" content="Planification de voyages sur mesure par Jessica. Europe, Asie, Amériques. Créez votre voyage de rêve." />
+  <meta property="og:title" content="Les Voyages de Jess | Planificatrice de Voyages Personnalisés" />
+  <meta property="og:description" content="Planification de voyages sur mesure par Jessica. Europe, Asie, Amériques. Créez votre voyage de rêve avec une professionnelle passionnée." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://lesvoyagesdejess.ca" />
-  <meta property="og:image" content="https://lesvoyagesdejess.ca/static/images/hero-background.jpg" />
+  <meta property="og:image" content="https://lesvoyagesdejess.ca/static/images/hero-background.webp" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="fr_CA" />
+  <meta property="og:site_name" content="Les Voyages de Jess" />
   
   {/* Twitter Card */}
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Les Voyages de Jess | Planificatrice de Voyages" />
-  <meta name="twitter:description" content="Planification de voyages sur mesure par Jessica" />
-  <meta name="twitter:image" content="https://lesvoyagesdejess.ca/static/images/hero-background.jpg" />
+  <meta name="twitter:title" content="Les Voyages de Jess | Planificatrice de Voyages Personnalisés" />
+  <meta name="twitter:description" content="Planification de voyages sur mesure par Jessica. Créez votre voyage de rêve avec une professionnelle passionnée." />
+  <meta name="twitter:image" content="https://lesvoyagesdejess.ca/static/images/hero-background.webp" />
   
   <script type="application/ld+json">
   {JSON.stringify({
@@ -99,8 +103,8 @@ app.use('*', async (c, next) => {
     },
     "url": "https://lesvoyagesdejess.ca",
     "sameAs": [
-      "https://www.facebook.com/lesvoyagesdejess",
-      "https://www.instagram.com/lesvoyagesdejess"
+      "https://www.facebook.com/jessica.finiel",
+      "https://www.instagram.com/lesvoyagesde_jess"
     ]
   })}
   </script>
@@ -115,9 +119,9 @@ app.use('*', async (c, next) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
         
         {/* Styles personnalisés */}
-        <link href="/static/css/styles.css" rel="stylesheet" />
+        <link href="/static/css/styles.css?v=4" rel="stylesheet" />
       </head>
-      <body>
+      <body class={bodyClass || ''}>
         {/* Menu hamburger */}
         <button class="menu-toggle">
           <span></span>
@@ -171,10 +175,10 @@ app.use('*', async (c, next) => {
             </div>
             <div class="footer-section">
               <h3>Contact</h3>
-              <p><i class="fas fa-envelope"></i> contact@lesvoyagesdejess.ca</p>
+              <p><i class="fas fa-envelope"></i> contact@lesvoyagesdejess.com</p>
               <div class="social-links">
-                <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+                <a href="https://www.instagram.com/lesvoyagesde_jess" class="social-link" target="_blank"><i class="fab fa-instagram"></i></a>
+                <a href="https://www.facebook.com/jessica.finiel" class="social-link" target="_blank"><i class="fab fa-facebook"></i></a>
               </div>
             </div>
           </div>
@@ -232,6 +236,191 @@ app.use('*', async (c, next) => {
 })
 
 // ============================================
+// API CONTACT FORM
+// ============================================
+
+app.post('/api/contact', async (c) => {
+  try {
+    const formData = await c.req.json()
+    
+    // Vérifier que l'email de destination existe
+    if (!c.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY manquante')
+      return c.json({ success: false, error: 'Configuration serveur manquante' }, 500)
+    }
+
+    // Sauvegarder dans la base de données
+    await c.env.db.prepare(`
+      INSERT INTO quote_requests (name, email, phone, destination, travel_dates, duration, travelers, budget, message, special_requests)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      formData.name,
+      formData.email,
+      formData.phone || null,
+      formData.destination,
+      formData.travel_dates || null,
+      formData.duration,
+      formData.travelers,
+      formData.budget || null,
+      formData.message,
+      formData.special_requests || null
+    ).run()
+
+    // Envoyer l'email via Resend
+    const emailResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${c.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'Les Voyages de Jess <contact@lesvoyagesdejess.com>',
+        to: 'contact@lesvoyagesdejess.com',
+        subject: `Nouvelle demande de devis - ${formData.name}`,
+        html: `
+          <h2>Nouvelle demande de devis</h2>
+          <p><strong>Nom:</strong> ${formData.name}</p>
+          <p><strong>Email:</strong> ${formData.email}</p>
+          <p><strong>Téléphone:</strong> ${formData.phone || 'Non renseigné'}</p>
+          <hr>
+          <p><strong>Destination:</strong> ${formData.destination}</p>
+          <p><strong>Dates:</strong> ${formData.travel_dates || 'Flexibles'}</p>
+          <p><strong>Durée:</strong> ${formData.duration}</p>
+          <p><strong>Nombre de voyageurs:</strong> ${formData.travelers}</p>
+          <p><strong>Budget:</strong> ${formData.budget || 'Non précisé'}</p>
+          <hr>
+          <p><strong>Message:</strong></p>
+          <p>${formData.message}</p>
+          ${formData.special_requests ? `
+            <p><strong>Demandes spéciales:</strong></p>
+            <p>${formData.special_requests}</p>
+          ` : ''}
+        `
+      })
+    })
+
+    if (!emailResponse.ok) {
+      const errorData = await emailResponse.text()
+      console.error('Erreur Resend:', errorData)
+      return c.json({ 
+        success: false, 
+        error: 'Erreur lors de l\'envoi de l\'email' 
+      }, 500)
+    }
+
+    return c.json({ 
+      success: true, 
+      message: 'Votre demande a été envoyée avec succès!' 
+    })
+
+  } catch (error) {
+    console.error('Erreur formulaire contact:', error)
+    return c.json({ 
+      success: false, 
+      error: 'Une erreur est survenue' 
+    }, 500)
+  }
+})
+
+
+// ============================================
+// API CHATBOT - Fonction helper pour RAG
+// ============================================
+
+/**
+ * Récupère les connaissances du chatbot depuis la base de données
+ * et les formate pour injection dans le prompt
+ */
+async function getChatbotKnowledge(db: D1Database): Promise<string> {
+  try {
+    const knowledge = await db.prepare(
+      'SELECT category, key, value FROM chatbot_knowledge WHERE active = 1 ORDER BY priority DESC, category ASC'
+    ).all()
+
+    if (!knowledge.results || knowledge.results.length === 0) {
+      return '' // Pas de connaissances = fallback sur prompt de base
+    }
+
+    // Organiser par catégorie
+    const byCategory: Record<string, Array<{key: string, value: string}>> = {}
+    
+    knowledge.results.forEach((row: any) => {
+      if (!byCategory[row.category]) {
+        byCategory[row.category] = []
+      }
+      byCategory[row.category].push({ key: row.key, value: row.value })
+    })
+
+    // Formater pour le prompt
+    let knowledgeText = '\n\n📚 INFORMATIONS OFFICIELLES DU SITE (à utiliser en priorité):\n\n'
+
+    // CONTACT
+    if (byCategory.contact) {
+      knowledgeText += '📧 CONTACT:\n'
+      byCategory.contact.forEach(item => {
+        if (item.key === 'email') knowledgeText += `- Email: ${item.value}\n`
+        if (item.key === 'delai_reponse') knowledgeText += `- Délai de réponse: ${item.value}\n`
+        if (item.key === 'formulaire_page') knowledgeText += `- Formulaire de contact: Sur la page ${item.value}\n`
+        if (item.key === 'telephone') knowledgeText += `- Téléphone: ${item.value}\n`
+        if (item.key === 'instagram') knowledgeText += `- Instagram: ${item.value}\n`
+      })
+      knowledgeText += '\n'
+    }
+
+    // PAGES DU SITE
+    if (byCategory.pages) {
+      knowledgeText += '🌐 PAGES DU SITE (pour rediriger les utilisateurs):\n'
+      byCategory.pages.forEach(item => {
+        knowledgeText += `- ${item.key.replace(/_/g, ' ')}: ${item.value}\n`
+      })
+      knowledgeText += '\n'
+    }
+
+    // FORMULES
+    if (byCategory.formules) {
+      knowledgeText += '💼 FORMULES:\n'
+      byCategory.formules.forEach(item => {
+        knowledgeText += `- ${item.key.replace(/_/g, ' ')}: ${item.value}\n`
+      })
+      knowledgeText += '\n'
+    }
+
+    // TARIFS
+    if (byCategory.tarifs) {
+      knowledgeText += '💰 TARIFS:\n'
+      byCategory.tarifs.forEach(item => {
+        knowledgeText += `- ${item.key.replace(/_/g, ' ')}: ${item.value}\n`
+      })
+      knowledgeText += '\n'
+    }
+
+    // GÉNÉRAL
+    if (byCategory.general) {
+      knowledgeText += '🎯 CONTEXTE GÉNÉRAL:\n'
+      byCategory.general.forEach(item => {
+        knowledgeText += `- ${item.key.replace(/_/g, ' ')}: ${item.value}\n`
+      })
+      knowledgeText += '\n'
+    }
+
+    // PROCESSUS
+    if (byCategory.processus) {
+      knowledgeText += '📋 PROCESSUS DE RÉSERVATION:\n'
+      byCategory.processus.forEach(item => {
+        knowledgeText += `- ${item.key}: ${item.value}\n`
+      })
+      knowledgeText += '\n'
+    }
+
+    return knowledgeText
+
+  } catch (error) {
+    console.error('Erreur récupération connaissances chatbot:', error)
+    return '' // En cas d'erreur, continuer sans RAG
+  }
+}
+
+// ============================================
 // API CHATBOT
 // ============================================
 
@@ -240,6 +429,9 @@ app.post('/api/chat', async (c) => {
   try {
     // Récupère l'historique envoyé par le frontend
     const { message, history = [] } = await c.req.json()
+    
+    // Récupérer les connaissances depuis la base de données (RAG)
+    const knowledgeContext = await getChatbotKnowledge(c.env.db)
     
     // Initialise le client Anthropic avec la clé API
     const anthropic = new Anthropic({
@@ -262,8 +454,31 @@ app.post('/api/chat', async (c) => {
       messages: messages,
       system: `Tu es un assistant de voyage expert pour 'Les Voyages de Jess'.
 
+🌐 CONTEXTE IMPORTANT:
+Tu es **intégré directement sur le site web** lesvoyagesdejess.com.
+Les utilisateurs sont DÉJÀ sur le site quand ils te parlent.
+Ne leur dis JAMAIS d'aller sur le site - ils y sont déjà !
+
+${knowledgeContext}
+
+⚠️ RÈGLES CRITIQUES POUR LES INFORMATIONS DE CONTACT:
+1. UTILISE UNIQUEMENT les informations de la section "INFORMATIONS OFFICIELLES" ci-dessus
+2. N'INVENTE JAMAIS de numéro de téléphone, adresse ou autre contact
+3. Si on te demande un numéro de téléphone et qu'il n'y en a pas → dis que Jessica préfère le contact par email/formulaire
+4. Pour rediriger vers une page → utilise les chemins de la section "PAGES DU SITE" (ex: "Vous pouvez remplir le formulaire sur cette page" si on est sur /contact)
+5. Sois conscient que l'utilisateur est DÉJÀ sur le site web
+
 TON RÔLE :
-Inspirer et conseiller, MAIS pas remplacer Jess.
+Tu es l'assistant virtuel de Jessica sur SON site web.
+Ton objectif: inspirer, conseiller et orienter vers Jessica.
+JAMAIS remplacer Jessica - tu es son aide, pas son remplaçant.
+
+🎯 COMMENT REDIRIGER INTELLIGEMMENT:
+- Si l'utilisateur veut "parler à Jessica" → suggère le formulaire de contact (il est sur le site !)
+- Si l'utilisateur demande "comment contacter" → donne l'email ET mentionne le formulaire
+- Si l'utilisateur veut des infos sur les formules → suggère d'aller sur /mes-formules
+- Utilise des phrases comme: "Vous pouvez...", "Je vous invite à...", "Remplissez le formulaire ci-dessous..."
+- ÉVITE: "Allez sur le site", "Visitez lesvoyagesdejess.com" (ils y sont déjà!)
 
 ⚠️⚠️⚠️ RÈGLE ABSOLUE CRITIQUE ⚠️⚠️⚠️
 TU NE PEUX SUGGÉRER **QUE** LES PAYS DE CETTE LISTE.
@@ -298,7 +513,8 @@ RÈGLES IMPORTANTES:
 2. Partage ton enthousiasme pour les destinations
 3. Ne donne JAMAIS d'itinéraires détaillés complets
 4. Ne donne JAMAIS de listes d'activités spécifiques ni de noms de lieux précis
-5. TOUJOURS conclure en invitant à contacter Jess
+5. TOUJOURS conclure en invitant à contacter Jessica (utilise les infos de la section CONTACT ci-dessus)
+6. Adapte ta réponse au CONTEXTE: l'utilisateur est sur le site, pas ailleurs !
 
 6. ⚠️ SI LA DESTINATION DEMANDÉE N'EST PAS DANS LA LISTE:
 
@@ -317,35 +533,30 @@ RÈGLES IMPORTANTES:
    
    ÉTAPE 5: Si tu n'es PAS CERTAIN à 100% → Ne suggère QUE 2 pays au lieu de 3
 
-7. EXEMPLES OBLIGATOIRES À SUIVRE:
+7. EXEMPLES DE RÉPONSES CONTEXTUELLES:
 
-   ❓ Zimbabwe / Namibie / Tanzanie / Afrique du Sud / Kenya / Botswana
-   ✅ "Malheureusement, Jess ne propose pas de services en Afrique pour le moment. Si vous recherchez nature et aventure, voici des destinations couvertes:
+   ❓ "Je veux parler à Jessica"
+   ✅ "Parfait ! Vous pouvez contacter Jessica directement via le formulaire de contact sur cette page, ou par email à contact@lesvoyagesdejess.com. Elle vous répondra sous 48h ! 😊"
+
+   ❓ "Comment je fais pour réserver ?"
+   ✅ "Pour créer votre voyage sur mesure avec Jessica, remplissez le formulaire de demande (accessible via le menu). Jessica vous contactera sous 48h pour un appel découverte gratuit ! 😊"
+
+   ❓ "Quel est le numéro de téléphone ?"
+   ✅ "Jessica privilégie le contact par email (contact@lesvoyagesdejess.com) et le formulaire de contact pour mieux comprendre votre projet. Elle vous répondra sous 48h ! 😊"
+
+   ❓ Zimbabwe / Namibie / Afrique
+   ✅ "Malheureusement, Jessica ne propose pas de services en Afrique pour le moment. Si vous recherchez nature et aventure, voici des destinations qu'elle couvre:
    - Costa Rica: Nature luxuriante et biodiversité
    - Norvège: Paysages grandioses et fjords
    - Pérou: Diversité naturelle et culture andine
-   Je vous invite à contacter Jess ! 😊"
+   Consultez la page /destinations pour voir toutes les options, ou contactez Jessica via le formulaire ! 😊"
 
-   ❓ Japon / Chine / Vietnam / Corée
-   ✅ "Malheureusement, Jess ne propose pas de services pour ce pays. Pour une immersion asiatique:
+   ❓ Japon / Chine / Vietnam
+   ✅ "Jessica ne couvre pas ce pays actuellement. Pour une immersion asiatique, elle peut vous aider avec:
    - Thaïlande: Culture vibrante et hospitalité
    - Indonésie (Bali): Spiritualité et traditions
    - Cambodge: Patrimoine historique exceptionnel
-   Je vous invite à contacter Jess ! 😊"
-
-   ❓ Australie / Nouvelle-Zélande
-   ✅ "Malheureusement, Jess ne propose pas de services en Océanie. Pour nature et aventure:
-   - Costa Rica: Biodiversité unique
-   - Canada: Immensité naturelle
-   - Norvège: Beautés sauvages
-   Je vous invite à contacter Jess ! 😊"
-
-   ❓ Islande
-   ✅ "Malheureusement, Jess ne propose pas de services pour l'Islande. Pour des paysages nordiques:
-   - Norvège: Fjords et aurores boréales
-   - Finlande: Nature préservée scandinave
-   - Canada: Grands espaces nordiques
-   Je vous invite à contacter Jess ! 😊"
+   Consultez /destinations pour la liste complète ! 😊"
 
 🎯 VÉRIFICATION AVANT CHAQUE RÉPONSE:
 Avant de suggérer un pays, pose-toi ces 3 questions:
@@ -391,16 +602,17 @@ app.get('/', async (c) => {
   // Récupérer les formules
   const packages = await c.env.db.prepare('SELECT * FROM travel_packages ORDER BY sort_order ASC').all();
 
-  return c.render(
-    <>
+ return c.render(
+  <>
+
     {/* Section Hero */}
-<section class="hero" style={{backgroundImage: "url('/static/images/hero-background.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative'}}>
+<section class="hero hero-home hero-homepage">
   <div style={{background: 'rgba(0,0,0,0.3)', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1}}></div>
   <div style={{position: 'relative', zIndex: 2}}>
     <h1 class="hero-title" style={{color: 'white', fontSize: '4rem'}}>Les Voyages de Jess</h1>
     <p class="hero-subtitle" style={{fontSize: '1.2rem', color: 'white', fontFamily: "'Alice', serif"}}>Créatrice de voyages sur mesure</p>
     <p style={{fontSize: '1.3rem', color: 'white', marginTop: '1rem', fontStyle: 'italic', fontFamily: "'Alice', serif"}}>
-      "Trouvez votre chemin de traverse, là où commence la magie du voyage"
+      "Parce que chaque voyageur est unique, chaque voyage doit l'être aussi."
     </p>
     <div style={{marginTop: '2rem'}}>
       <a href="/contact" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
@@ -412,41 +624,95 @@ app.get('/', async (c) => {
 
 {/* Section Formules */}
 <section class="section">
-  <h2 class="section-title">Mes Formules de Voyage</h2>
   
   {/* Texte explicatif éditable */}
-  <div style={{maxWidth: '800px', margin: '0 auto 3rem', textAlign: 'center', padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)'}}>
-    <p style={{fontSize: '1.1rem', lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
-      {settingsMap.formules_intro || "En tant que Travel Planner, mon rôle est de concevoir votre voyage sur mesure de A à Z. Je m'occupe de créer un itinéraire personnalisé, adapté à vos envies, votre budget et votre rythme. Vous gagnez du temps et profitez de conseils d'experte pour un voyage qui vous ressemble vraiment."}
-    </p>
-  </div>
-  
-  <p style={{textAlign: 'center', color: 'var(--color-text-secondary)', maxWidth: '700px', margin: '0 auto 2rem'}}>
-    Choisissez la formule qui correspond à vos envies. Chaque voyage est unique et adapté à votre rythme.
-  </p>
+  {/* Mise en page 2 colonnes : Texte + Photo */}
+  <div style={{display: 'flex', gap: '3rem', alignItems: 'center', maxWidth: '1200px', margin: '0 auto 3rem', flexWrap: 'wrap'}}>
+    
+    {/* Colonne gauche : Texte */}
+    <div style={{flex: '1 1 45%', minWidth: '300px'}}>
+      <div style={{padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
+        <h2 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontFamily: '\'Brittany Signature\', cursive'}}>Mon rôle</h2>
+        <p style={{lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
+          Mon rôle, c'est de transformer vos idées d'évasion en un voyage concret, fluide et surtout à votre image.
+        </p>
+        <p style={{lineHeight: 1.8, color: 'var(--color-text-primary)', marginTop: '1rem'}}>
+          Ensemble, nous créons l'itinéraire parfait pour vous, selon vos envies, vos priorités et votre budget. Je conçois des voyages sur mesure, pensés dans les moindres détails : des lieux à découvrir, des hébergements à essayer, des activités à vivre, et des moments à savourer.
+        </p>
+        <p style={{lineHeight: 1.8, color: 'var(--color-text-primary)', marginTop: '1rem'}}>
+          Je vous offre une vision claire, personnalisée et inspirante pour que votre voyage se déroule sans stress tout en vous laissant la liberté de réserver et de le vivre à votre rythme.
+        </p>
+      </div>
+    </div>
+    
+    {/* Colonne droite : Photo */}
+    <div style={{flex: '1 1 45%', minWidth: '300px'}}>
+      <img 
+        src="/static/images/mon-role.webp" 
+        alt="Jessica - Travel Planner" 
+        loading="lazy"
+        style={{width: '100%', height: 'auto', borderRadius: 'var(--radius-lg)', objectFit: 'cover'}}
+      />
+    </div>
 
-        <div class="packages-grid">
-          {packages.results.map((pkg: any) => (
-            <div class="package-card">
-              <div class="package-image">
-                {/* Placeholder - les images seront ajoutées plus tard */}
-              </div>
-              <div class="package-content">
-                <h3 class="package-name">{pkg.name}</h3>
-                <p class="package-duration"><i class="fas fa-clock"></i> {pkg.duration}</p>
-                <p class="package-description">{pkg.description}</p>
-                <div class="package-price">
-                  <div>
-                    <span class="price-amount">{pkg.price_eur}€</span>
-                    <span style={{color: 'var(--color-text-secondary)'}}> / </span>
-                    <span class="price-amount">{pkg.price_cad}$</span>
-                  </div>
-                  <a href="/voyage-sur-mesure" class="btn btn-primary">Découvrir</a>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+</div>
+  
+{/* Section 4 étapes */}
+<div style={{background: 'var(--color-bg-warm)', padding: '4rem 2rem'}}>
+  <div style={{maxWidth: '1200px', margin: '0 auto'}}>
+    <h2 style={{color: 'var(--color-primary)', marginBottom: '3rem', fontFamily: '\'Brittany Signature\', cursive', fontSize: '2.5rem', textAlign: 'center'}}>
+      Les étapes de mon accompagnement
+    </h2>
+    
+    <div class="etapes-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem'}}>
+      
+      {/* Étape 1 */}
+      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center', transition: 'transform 0.3s ease, box-shadow 0.3s ease'}} class="etape-card">
+        <div style={{fontSize: '2.5rem', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: '1rem'}}>1</div>
+        <h3 style={{color: 'var(--color-text-primary)', marginBottom: '1rem', fontSize: '1.2rem'}}>Formulaire à remplir</h3>
+        <p style={{color: 'var(--color-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem'}}>
+          Partagez vos souhaits, envies, budget...
+        </p>
+      </div>
+      
+      {/* Étape 2 */}
+      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center', transition: 'transform 0.3s ease, box-shadow 0.3s ease'}} class="etape-card">
+        <div style={{fontSize: '2.5rem', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: '1rem'}}>2</div>
+        <h3 style={{color: 'var(--color-text-primary)', marginBottom: '1rem', fontSize: '1.2rem'}}>Appel découverte gratuit</h3>
+        <p style={{color: 'var(--color-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem'}}>
+          Par téléphone ou visioconférence pour cibler votre demande, vos critères et envies pour votre séjour.
+        </p>
+      </div>
+      
+      {/* Étape 3 */}
+      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center', transition: 'transform 0.3s ease, box-shadow 0.3s ease'}} class="etape-card">
+        <div style={{fontSize: '2.5rem', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: '1rem'}}>3</div>
+        <h3 style={{color: 'var(--color-text-primary)', marginBottom: '1rem', fontSize: '1.2rem'}}>Création et validation du devis</h3>
+        <p style={{color: 'var(--color-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem'}}>
+          Je vous présente un devis personnalisé que nous validons ensemble.
+        </p>
+      </div>
+      
+      {/* Étape 4 */}
+      <div style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center', transition: 'transform 0.3s ease, box-shadow 0.3s ease'}} class="etape-card">
+        <div style={{fontSize: '2.5rem', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: '1rem'}}>4</div>
+        <h3 style={{color: 'var(--color-text-primary)', marginBottom: '1rem', fontSize: '1.2rem'}}>Votre carnet de voyage personnalisé</h3>
+        <p style={{color: 'var(--color-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem'}}>
+          Création de votre carnet de voyage détaillé en format PDF.
+        </p>
+      </div>
+      
+    </div>
+  </div>
+</div>
+      
+  {/* Lien vers les formules */}
+  <div style={{textAlign: 'center', margin: '3rem 0'}}>
+    <a href="/mes-formules" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
+      <i class="fas fa-suitcase"></i> Voir mes formules
+    </a>
+  </div>
+
       </section>
 
       {/* Section À propos (courte) */}
@@ -460,6 +726,101 @@ app.get('/', async (c) => {
           <a href="/qui-suis-je" class="btn btn-secondary">
             <i class="fas fa-arrow-right"></i> En savoir plus
           </a>
+        </div>
+      </section>
+
+      {/* Section Articles récents */}
+      <section class="section">
+        <div style={{maxWidth: '1200px', margin: '0 auto'}}>
+          <h2 class="section-title" style={{textAlign: 'center', marginBottom: '3rem'}}>Articles récents</h2>
+          
+          {/* Carousel container */}
+          <div class="blog-carousel-container">
+            <button class="carousel-btn carousel-btn-prev" onclick="scrollBlogCarousel(-1)">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <div class="blog-carousel">
+              {/* Article exemple 1 */}
+              <div class="blog-card">
+                <div class="blog-card-image" style={{backgroundImage: "url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600')"}}></div>
+                <div class="blog-card-content">
+                  <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>10 destinations incontournables en 2026</h3>
+                  <p class="blog-card-date" style={{color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem'}}>
+                    <i class="far fa-calendar"></i> Février 2026
+                  </p>
+                  <p style={{lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '1.5rem'}}>
+                    Découvrez mes coups de cœur pour vos prochaines aventures. Des destinations authentiques qui vous feront vivre des expériences inoubliables...
+                  </p>
+                  <a href="/blog" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-book-open"></i> Lire l'article
+                  </a>
+                </div>
+              </div>
+
+              {/* Article exemple 2 */}
+              <div class="blog-card">
+                <div class="blog-card-image" style={{backgroundImage: "url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600')"}}></div>
+                <div class="blog-card-content">
+                  <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>Comment préparer son voyage en 5 étapes</h3>
+                  <p class="blog-card-date" style={{color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem'}}>
+                    <i class="far fa-calendar"></i> Février 2026
+                  </p>
+                  <p style={{lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '1.5rem'}}>
+                    Les conseils essentiels pour un voyage réussi. De la planification à la réservation, découvrez mes astuces de professionnelle...
+                  </p>
+                  <a href="/blog" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-book-open"></i> Lire l'article
+                  </a>
+                </div>
+              </div>
+
+              {/* Article exemple 3 */}
+              <div class="blog-card">
+                <div class="blog-card-image" style={{backgroundImage: "url('https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=600')"}}></div>
+                <div class="blog-card-content">
+                  <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>Voyage en famille : mes destinations préférées</h3>
+                  <p class="blog-card-date" style={{color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem'}}>
+                    <i class="far fa-calendar"></i> Février 2026
+                  </p>
+                  <p style={{lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '1.5rem'}}>
+                    Les meilleures destinations pour voyager avec des enfants. Sécurité, activités et hébergements adaptés pour toute la famille...
+                  </p>
+                  <a href="/blog" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-book-open"></i> Lire l'article
+                  </a>
+                </div>
+              </div>
+
+              {/* Article exemple 4 */}
+              <div class="blog-card">
+                <div class="blog-card-image" style={{backgroundImage: "url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600')"}}></div>
+                <div class="blog-card-content">
+                  <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>Voyager en solo : mes meilleurs conseils</h3>
+                  <p class="blog-card-date" style={{color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem'}}>
+                    <i class="far fa-calendar"></i> Février 2026
+                  </p>
+                  <p style={{lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '1.5rem'}}>
+                    L'aventure en solo n'aura plus de secrets pour vous. Sécurité, rencontres et liberté : tout ce qu'il faut savoir...
+                  </p>
+                  <a href="/blog" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-book-open"></i> Lire l'article
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <button class="carousel-btn carousel-btn-next" onclick="scrollBlogCarousel(1)">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+
+          {/* Bouton vers le blog */}
+          <div style={{textAlign: 'center', marginTop: '3rem'}}>
+            <a href="/blog" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
+              <i class="fas fa-newspaper"></i> Découvrir le blog
+            </a>
+          </div>
         </div>
       </section>
 
@@ -498,7 +859,7 @@ app.get('/qui-suis-je', async (c) => {
       <section class="section">
         <div class="about-section">
           <div>
-            <img src={settingsMap.about_photo || '/static/images/jessica-placeholder.jpg'} 
+            <img src={settingsMap.about_photo || '/static/images/jessica-placeholder.webp'} 
                  alt="Jessica" 
                  class="about-image" />
           </div>
@@ -546,28 +907,10 @@ app.get('/mes-formules', async (c) => {
 
   return c.render(
     <>
-      <section class="hero">
+      <section class="hero hero-formules">
         <h1 class="hero-title">Mes Formules</h1>
         <p class="hero-subtitle">Choisissez celle qui correspond à vos envies</p>
       </section>
-
-      <section class="section">
-        <div style={{maxWidth: '900px', margin: '0 auto', textAlign: 'center', padding: '2rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)', marginBottom: '3rem'}}>
-          <h2 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontFamily: '\'Brittany Signature\', cursive', fontSize: '2.5rem'}}>Mon rôle</h2>
-          <div style={{textAlign: 'left', lineHeight: 1.8, color: 'var(--color-text-primary)'}}>
-            <p style={{marginBottom: '1rem'}}>
-              Mon rôle, c'est de transformer vos idées d'évasion en un voyage concret, fluide et surtout à votre image.
-            </p>
-            <p style={{marginBottom: '1rem'}}>
-              Ensemble, nous créons l'itinéraire parfait pour vous, selon vos envies, vos priorités et votre budget. Je conçois des voyages sur mesure, pensés dans les moindres détails : des lieux à découvrir, des hébergements à essayer, des activités à vivre, et des moments à savourer.
-            </p>
-            <p>
-              Je vous offre une vision claire, personnalisée et inspirante pour que votre voyage se déroule sans stress tout en vous laissant la liberté de réserver et de le vivre à votre rythme.
-            </p>
-          </div>
-        </div>
-      </section>
-
 
       <section class="section">
         <div class="packages-grid">
@@ -591,6 +934,7 @@ app.get('/mes-formules', async (c) => {
                 </div>
                 <div class="package-price">
                   <div>
+                    <span style={{fontSize: '0.9rem', color: 'var(--color-text-secondary)', display: 'block', marginBottom: '0.25rem'}}>À partir de</span>
                     <span class="price-amount">{pkg.price_eur}€</span>
                     <span style={{color: 'var(--color-text-secondary)'}}> / </span>
                     <span class="price-amount">{pkg.price_cad}$</span>
@@ -609,7 +953,7 @@ app.get('/mes-formules', async (c) => {
           <p style={{fontSize: '1.1rem', color: 'var(--color-text-secondary)', marginBottom: '3rem'}}>
             Envie d'aller plus loin ? Découvrez mes services supplémentaires pour rendre votre voyage encore plus mémorable.
           </p>
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem'}}>
+          <div class="petits-plus-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem'}}>
             <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
               <div style={{fontSize: '3rem', marginBottom: '1rem'}}>🐕</div>
               <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Voyages dog-friendly</h3>
@@ -631,7 +975,7 @@ app.get('/mes-formules', async (c) => {
 
       <section class="section section-warm">
         <div style={{maxWidth: '800px', margin: '0 auto', textAlign: 'center'}}>
-          <h2 class="section-title">Besoin de quelque chose de différent?</h2>
+          <h2 class="section-title" style={{color: 'var(--color-text-primary)'}}>Besoin de quelque chose de différent?</h2>
           <p style={{fontSize: '1.1rem', marginBottom: '2rem'}}>
             Chaque voyage est unique. Si aucune formule ne correspond exactement à vos besoins,
             contactez-moi pour un devis personnalisé.
@@ -652,7 +996,7 @@ app.get('/mes-formules', async (c) => {
 app.get('/voyage-sur-mesure', (c) => {
   return c.render(
     <>
-      <section class="hero">
+      <section class="hero hero-voyage-sur-mesure">
   <h1 class="hero-title">Votre Voyage sur Mesure</h1>
   <p class="hero-subtitle">Comment ça marche?</p>
 </section>
@@ -707,7 +1051,7 @@ app.get('/voyage-sur-mesure', (c) => {
           <p style={{fontSize: '1.1rem', color: 'var(--color-text-secondary)', marginBottom: '3rem'}}>
             Envie d'aller plus loin ? Découvrez mes services supplémentaires.
           </p>
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem'}}>
+          <div class="petits-plus-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem'}}>
             <div style={{background: 'var(--color-bg-warm)', padding: '2rem', borderRadius: 'var(--radius-lg)', textAlign: 'center'}}>
               <div style={{fontSize: '3rem', marginBottom: '1rem'}}>🐕</div>
               <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>Voyages dog-friendly</h3>
@@ -728,7 +1072,7 @@ app.get('/voyage-sur-mesure', (c) => {
       </section>
 
       <section class="section section-warm" style={{textAlign: 'center'}}>
-        <h2 class="section-title">Prêt à commencer?</h2>
+        <h2 class="section-title" style={{color: 'var(--color-text-primary)'}}>Prêt à commencer?</h2>
         <p style={{fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto 2rem'}}>
           Remplissez le formulaire de demande et je vous recontacte rapidement pour 
           commencer à planifier votre voyage de rêve.
@@ -751,9 +1095,8 @@ app.get('/voyage-sur-mesure', (c) => {
 app.get('/destinations', (c) => {
   return c.render(
     <>
-      <section class="hero">
+      <section class="hero hero-destinations">
         <h1 class="hero-title">Mes Destinations</h1>
-        <p class="hero-subtitle">Les pays que je connais et pour lesquels je propose mes services</p>
       </section>
 
       <section class="section">
@@ -856,9 +1199,51 @@ app.get('/destinations', (c) => {
 app.get('/faq', async (c) => {
   const faqs = await c.env.db.prepare('SELECT * FROM faqs ORDER BY sort_order ASC').all();
 
+  // Fonction pour formater la réponse avec retours à la ligne et listes
+  const formatAnswer = (text: string) => {
+    if (!text) return '';
+    
+    // Séparer par lignes
+    const lines = text.split('\n');
+    let html = '';
+    let inList = false;
+    
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+      
+      // Détecter une ligne de liste (commence par • ou - ou *)
+      if (trimmedLine.match(/^[•\-\*]\s+/)) {
+        if (!inList) {
+          html += '<ul>';
+          inList = true;
+        }
+        const listContent = trimmedLine.replace(/^[•\-\*]\s+/, '');
+        html += `<li>${listContent}</li>`;
+      } else {
+        // Fermer la liste si on était dedans
+        if (inList) {
+          html += '</ul>';
+          inList = false;
+        }
+        
+        // Ajouter la ligne normale
+        if (trimmedLine) {
+          html += `<p>${trimmedLine}</p>`;
+        }
+      }
+    });
+    
+    // Fermer la liste si elle était ouverte
+    if (inList) {
+      html += '</ul>';
+    }
+    
+    return html;
+  };
+
   return c.render(
     <>
-      <section class="hero">
+      <section class="hero hero-faq">
         <h1 class="hero-title">Questions Fréquentes</h1>
         <p class="hero-subtitle">Tout ce que vous devez savoir</p>
       </section>
@@ -871,8 +1256,7 @@ app.get('/faq', async (c) => {
                 <span>{faq.question}</span>
                 <i class="fas fa-chevron-down faq-icon"></i>
               </div>
-              <div class="faq-answer">
-                <p>{faq.answer}</p>
+              <div class="faq-answer" dangerouslySetInnerHTML={{ __html: formatAnswer(faq.answer) }}>
               </div>
             </div>
           ))}
@@ -901,7 +1285,7 @@ app.get('/blog', async (c) => {
 
   return c.render(
     <>
-      <section class="hero">
+      <section class="hero hero-blog">
         <h1 class="hero-title">Blog</h1>
         <p class="hero-subtitle">Récits, conseils et inspirations voyage</p>
       </section>
@@ -949,7 +1333,7 @@ app.get('/blog', async (c) => {
 app.get('/contact', (c) => {
   return c.render(
     <>
-      <section class="hero">
+      <section class="hero hero-contact">
         <h1 class="hero-title">Contact</h1>
         <p class="hero-subtitle">Commençons à planifier votre voyage</p>
       </section>
@@ -963,89 +1347,329 @@ app.get('/contact', (c) => {
             </p>
           </div>
 
-          <form id="quote-form" style={{background: 'white', padding: '2rem', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)'}}>
-            <div class="form-group">
-              <label class="form-label" for="name">Nom complet *</label>
-              <input type="text" id="name" name="name" class="form-input" required />
+          {/* Barre de progression */}
+          <div id="progress-bar" style={{marginBottom: '2rem'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', marginBottom: '1rem'}}>
+              {/* Ligne de fond */}
+              <div style={{position: 'absolute', top: '50%', left: '0', right: '0', height: '4px', background: '#E5E7EB', zIndex: 0, borderRadius: '2px'}}></div>
+              {/* Ligne de progression */}
+              <div id="progress-line" style={{position: 'absolute', top: '50%', left: '0', height: '4px', background: 'var(--color-primary)', zIndex: 1, width: '0%', transition: 'width 0.3s ease', borderRadius: '2px'}}></div>
+              
+              {/* Étapes */}
+              <div class="progress-step active" data-step="1" style={{position: 'relative', zIndex: 2}}>
+                <div style={{width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.1rem', transition: 'all 0.3s ease'}}>1</div>
+                <div style={{position: 'absolute', top: '50px', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontSize: '0.875rem', color: 'var(--color-primary)', fontWeight: '500'}}>Qui êtes-vous ?</div>
+              </div>
+              
+              <div class="progress-step" data-step="2" style={{position: 'relative', zIndex: 2}}>
+                <div style={{width: '40px', height: '40px', borderRadius: '50%', background: '#E5E7EB', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.1rem', transition: 'all 0.3s ease'}}>2</div>
+                <div style={{position: 'absolute', top: '50px', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontSize: '0.875rem', color: '#6B7280'}}>Votre destination</div>
+              </div>
+              
+              <div class="progress-step" data-step="3" style={{position: 'relative', zIndex: 2}}>
+                <div style={{width: '40px', height: '40px', borderRadius: '50%', background: '#E5E7EB', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.1rem', transition: 'all 0.3s ease'}}>3</div>
+                <div style={{position: 'absolute', top: '50px', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontSize: '0.875rem', color: '#6B7280'}}>Détails</div>
+              </div>
+              
+              <div class="progress-step" data-step="4" style={{position: 'relative', zIndex: 2}}>
+                <div style={{width: '40px', height: '40px', borderRadius: '50%', background: '#E5E7EB', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.1rem', transition: 'all 0.3s ease'}}>4</div>
+                <div style={{position: 'absolute', top: '50px', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', fontSize: '0.875rem', color: '#6B7280'}}>Votre projet</div>
+              </div>
             </div>
+          </div>
 
-            <div class="form-group">
-              <label class="form-label" for="email">Email *</label>
-              <input type="email" id="email" name="email" class="form-input" required />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="phone">Téléphone</label>
-              <input type="tel" id="phone" name="phone" class="form-input" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label" for="destination">Destination souhaitée *</label>
-              <input type="text" id="destination" name="destination" class="form-input" placeholder="Ex: Japon, Italie, Amérique du Sud..." required />
-            </div>
-
-            <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+          {/* Formulaire multi-étapes */}
+          <form id="quote-form" style={{background: 'white', padding: '2.5rem', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', minHeight: '450px'}}>
+            
+            {/* ÉTAPE 1 : Coordonnées */}
+            <div class="form-step active" data-step="1">
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontSize: '1.5rem'}}>
+                <i class="far fa-user"></i> Qui êtes-vous ?
+              </h3>
+              
               <div class="form-group">
-                <label class="form-label" for="duration">Durée du voyage *</label>
-                <select id="duration" name="duration" class="form-select" required>
+                <label class="form-label" for="name">Nom complet :</label>
+                <input type="text" id="name" name="name" class="form-input" placeholder="Jessica Dupont" required />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="email">Email :</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="jessica@exemple.com" required />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="phone">Téléphone (optionnel) :</label>
+                <input type="tel" id="phone" name="phone" class="form-input" placeholder="+33 6 12 34 56 78" />
+              </div>
+            </div>
+
+            {/* ÉTAPE 2 : Destination */}
+            <div class="form-step" data-step="2" style={{display: 'none'}}>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontSize: '1.5rem'}}>
+                <i class="fas fa-globe-americas"></i> Où rêvez-vous d'aller ?
+              </h3>
+              
+              <div class="form-group">
+                <label class="form-label" for="destination">Destination souhaitée :</label>
+                <input type="text" id="destination" name="destination" class="form-input" 
+                       placeholder="Ex: Japon, Patagonie, Islande, Bali..." required />
+                <p style={{fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem'}}>
+                  💡 Vous hésitez entre plusieurs destinations ? Listez-les !
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="travel-dates">Période souhaitée (optionnel)</label>
+                <input type="text" id="travel-dates" name="travel_dates" class="form-input" 
+                       placeholder="Ex: Été 2025, Septembre, Dates flexibles..." />
+              </div>
+            </div>
+
+            {/* ÉTAPE 3 : Détails pratiques */}
+            <div class="form-step" data-step="3" style={{display: 'none'}}>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontSize: '1.5rem'}}>
+                <i class="far fa-calendar-alt"></i> Détails pratiques
+              </h3>
+              
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+                <div class="form-group">
+                  <label class="form-label" for="duration">Durée du voyage :</label>
+                  <select id="duration" name="duration" class="form-select" required>
+                    <option value="">Choisir...</option>
+                    <option value="2-6">2 à 6 jours</option>
+                    <option value="7-14">7 à 14 jours</option>
+                    <option value="15-21">15 à 21 jours</option>
+                    <option value="21+">Plus de 21 jours</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="travelers">Nombre de voyageurs :</label>
+                  <input type="number" id="travelers" name="travelers" class="form-input" min="1" placeholder="2" required />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="budget">Budget estimé par personne :</label>
+                <select id="budget" name="budget" class="form-select">
                   <option value="">Choisir...</option>
-                  <option value="2-6">2 à 6 jours</option>
-                  <option value="7-14">7 à 14 jours</option>
-                  <option value="15-21">15 à 21 jours</option>
-                  <option value="21+">Plus de 21 jours</option>
+                  <option value="low">Moins de 1000€ / 1500$ CAD</option>
+                  <option value="medium">1000€ - 3000€ / 1500$ - 4500$ CAD</option>
+                  <option value="high">3000€ - 5000€ / 4500$ - 7500$ CAD</option>
+                  <option value="luxury">Plus de 5000€ / 7500$ CAD</option>
                 </select>
               </div>
+            </div>
+
+                        {/* ÉTAPE 4 : Projet & champ libre */}
+            <div class="form-step" data-step="4" style={{display: 'none'}}>
+              <h3 style={{color: 'var(--color-primary)', marginBottom: '1.5rem', fontSize: '1.5rem'}}>
+                <i class="far fa-heart"></i> Parlez-moi de votre projet
+              </h3>
+              
+              <div class="form-group">
+                <label class="form-label" for="message">Qu'est-ce qui vous fait rêver ?</label>
+                <textarea id="message" name="message" class="form-textarea" rows="6"
+                          placeholder="Ex: Nous aimons la randonnée et les paysages sauvages. Nous recherchons un mélange d'aventure et de détente..." 
+                          style={{width: '100%', resize: 'none', display: 'block', marginTop: '0.5rem'}}
+                          required></textarea>
+              </div>
 
               <div class="form-group">
-                <label class="form-label" for="travelers">Nombre de voyageurs *</label>
-                <input type="number" id="travelers" name="travelers" class="form-input" min="1" required />
+                <label class="form-label" for="special-requests">
+                  Qu'est-ce qui rendrait ce voyage parfait pour vous ? (optionnel)
+                </label>
+                <textarea id="special-requests" name="special_requests" class="form-textarea" rows="6"
+                          placeholder="Ex: Voyager avec notre chien, célébrer un anniversaire, éviter les longs vols, besoin d'accessibilité, allergies alimentaires..."
+                          style={{width: '100%', resize: 'none', display: 'block', marginTop: '0.5rem'}}></textarea>
+                <p style={{fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem'}}>
+                  💬 Partagez tout ce qui vous semble important : occasions spéciales, contraintes, préférences...
+                </p>
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="budget">Budget estimé</label>
-              <select id="budget" name="budget" class="form-select">
-                <option value="">Choisir...</option>
-                <option value="low">Moins de 1000€/pers</option>
-                <option value="medium">1000€ - 3000€/pers</option>
-                <option value="high">3000€ - 5000€/pers</option>
-                <option value="luxury">Plus de 5000€/pers</option>
-              </select>
-            </div>
 
-            <div class="form-group">
-              <label class="form-label" for="message">Parlez-moi de votre projet *</label>
-              <textarea id="message" name="message" class="form-textarea" 
-                        placeholder="Qu'est-ce qui vous fait rêver? Quels types d'expériences recherchez-vous?" 
-                        required></textarea>
+            {/* Boutons de navigation */}
+            <div style={{display: 'flex', justifyContent: 'space-between', marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid #E5E7EB'}}>
+              <button type="button" id="prev-btn" class="btn" style={{visibility: 'hidden', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem'}}>
+                <i class="fas fa-arrow-left"></i> Précédent
+              </button>
+              
+              <button type="button" id="next-btn" class="btn btn-primary" style={{display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem'}}>
+                Suivant <i class="fas fa-arrow-right"></i>
+              </button>
+              
+              <button type="submit" id="submit-btn" class="btn btn-primary" style={{display: 'none', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 2rem'}}>
+                <i class="fas fa-paper-plane"></i> Envoyer ma demande
+              </button>
             </div>
-
-            <button type="submit" class="btn btn-primary" style={{width: '100%', padding: '1rem', fontSize: '1.1rem'}}>
-              <i class="fas fa-paper-plane"></i> Envoyer ma demande
-            </button>
           </form>
 
           <div style={{marginTop: '2rem', textAlign: 'center', padding: '2rem'}}>
             <h3 style={{marginBottom: '1rem'}}>Ou contactez-moi directement :</h3>
             <p style={{fontSize: '1.1rem', marginBottom: '0.5rem'}}>
               <i class="fas fa-envelope" style={{color: 'var(--color-primary)'}}></i> 
-              <a href="mailto:contact@lesvoyagesdejess.ca" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
-                contact@lesvoyagesdejess.ca
+              <a href="mailto:contact@lesvoyagesdejess.com" style={{color: 'var(--color-primary)', textDecoration: 'none'}}>
+                contact@lesvoyagesdejess.com
               </a>
             </p>
             <p style={{fontSize: '1.1rem'}}>
               <i class="fab fa-instagram" style={{color: 'var(--color-secondary)'}}></i> 
-              <a href="https://instagram.com/lesvoyagesdejess" target="_blank" style={{color: 'var(--color-secondary)', textDecoration: 'none'}}>
+              <a href="https://instagram.com/lesvoyagesde_jess" target="_blank" style={{color: 'var(--color-secondary)', textDecoration: 'none'}}>
                 @lesvoyagesdejess
               </a>
             </p>
           </div>
         </div>
       </section>
+
+{/* CSS pour améliorer les textarea */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .form-textarea {
+          font-family: inherit;
+          font-size: 1rem;
+          padding: 0.75rem;
+          border: 1px solid #D1D5DB;
+          border-radius: 8px;
+          outline: none;
+          transition: border-color 0.2s ease;
+        }
+        
+        .form-textarea:focus {
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 3px rgba(139, 92, 73, 0.1);
+        }
+        
+        .form-textarea::placeholder {
+          color: #9CA3AF;
+        }
+      `}} />
+
+      {/* JavaScript pour le formulaire multi-étapes */}
+      <script dangerouslySetInnerHTML={{__html: `
+        (function() {
+          let currentStep = 1;
+          const totalSteps = 4;
+          
+          const nextBtn = document.getElementById('next-btn');
+          const prevBtn = document.getElementById('prev-btn');
+          const submitBtn = document.getElementById('submit-btn');
+          const progressLine = document.getElementById('progress-line');
+          
+          function updateStep() {
+            // Masquer toutes les étapes
+            document.querySelectorAll('.form-step').forEach(step => {
+              step.style.display = 'none';
+            });
+            
+            // Afficher l'étape courante avec animation
+            const currentStepEl = document.querySelector('.form-step[data-step="' + currentStep + '"]');
+            if (currentStepEl) {
+              currentStepEl.style.display = 'block';
+              currentStepEl.style.animation = 'fadeIn 0.4s ease-in-out';
+            }
+            
+            // Mettre à jour la barre de progression
+            const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            progressLine.style.width = progressPercentage + '%';
+            
+            // Mettre à jour les indicateurs d'étape
+            document.querySelectorAll('.progress-step').forEach((step, index) => {
+              const stepNum = index + 1;
+              const circle = step.querySelector('div:first-child');
+              const label = step.querySelector('div:last-child');
+              
+              if (stepNum < currentStep) {
+                // Étape complétée
+                circle.style.background = 'var(--color-secondary)';
+                circle.style.color = 'white';
+                circle.innerHTML = '<i class="fas fa-check"></i>';
+                label.style.color = 'var(--color-secondary)';
+              } else if (stepNum === currentStep) {
+                // Étape active
+                circle.style.background = 'var(--color-primary)';
+                circle.style.color = 'white';
+                circle.textContent = stepNum;
+                label.style.color = 'var(--color-primary)';
+                label.style.fontWeight = '600';
+              } else {
+                // Étape à venir
+                circle.style.background = '#E5E7EB';
+                circle.style.color = '#6B7280';
+                circle.textContent = stepNum;
+                label.style.color = '#6B7280';
+                label.style.fontWeight = '400';
+              }
+            });
+            
+            // Gérer la visibilité des boutons
+            prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+            
+            if (currentStep === totalSteps) {
+              nextBtn.style.display = 'none';
+              submitBtn.style.display = 'flex';
+            } else {
+              nextBtn.style.display = 'flex';
+              submitBtn.style.display = 'none';
+            }
+          }
+          
+          function validateStep(step) {
+            const stepEl = document.querySelector('.form-step[data-step="' + step + '"]');
+            const requiredInputs = stepEl.querySelectorAll('[required]');
+            
+            for (let input of requiredInputs) {
+              if (!input.value.trim()) {
+                input.focus();
+                input.style.borderColor = '#EF4444';
+                setTimeout(() => { input.style.borderColor = ''; }, 2000);
+                return false;
+              }
+            }
+            return true;
+          }
+          
+          nextBtn.addEventListener('click', function() {
+            if (validateStep(currentStep)) {
+              if (currentStep < totalSteps) {
+                currentStep++;
+                updateStep();
+              }
+            }
+          });
+          
+          prevBtn.addEventListener('click', function() {
+            if (currentStep > 1) {
+              currentStep--;
+              updateStep();
+            }
+          });
+          
+          // Initialiser
+          updateStep();
+          
+          // Ajouter l'animation CSS
+          const style = document.createElement('style');
+          style.textContent = \`
+            @keyframes fadeIn {
+              from {
+                opacity: 0;
+                transform: translateY(10px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+          \`;
+          document.head.appendChild(style);
+        })();
+      `}} />
     </>,
     { title: 'Contact - Les Voyages de Jess' }
   )
 })
+
 
 // ============================================
 // API ROUTES
@@ -1057,14 +1681,21 @@ app.get('/api/packages', async (c) => {
   return c.json(packages.results)
 })
 
-// API: Soumettre une demande de devis
+// API: Soumettre une demande de devis avec envoi d'email
 app.post('/api/quote-request', async (c) => {
   const data = await c.req.json();
-  
+
   try {
+    // 1. Vérifier que la clé Resend existe
+    if (!c.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY manquante');
+      return c.json({ success: false, error: 'Configuration serveur manquante' }, 500);
+    }
+
+    // 2. Sauvegarder dans la base de données
     await c.env.db.prepare(`
-      INSERT INTO quote_requests (name, email, phone, destination, duration, budget, travelers, message)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO quote_requests (name, email, phone, destination, duration, budget, travelers, message, special_requests)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       data.name,
       data.email,
@@ -1073,14 +1704,51 @@ app.post('/api/quote-request', async (c) => {
       data.duration,
       data.budget || null,
       data.travelers,
-      data.message
+      data.message,
+      data.special_requests || null
     ).run();
-    
-    return c.json({ success: true, message: 'Demande envoyée avec succès' })
+
+    // 3. Envoyer l'email via Resend
+    const emailResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${c.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'Les Voyages de Jess <contact@lesvoyagesdejess.com>',
+        to: 'contact@lesvoyagesdejess.com',
+        subject: `Nouvelle demande de devis - ${data.name}`,
+        html: `
+          <h2>Nouvelle demande de devis</h2>
+          <p><strong>Nom:</strong> ${data.name}</p>
+          <p><strong>Email:</strong> ${data.email}</p>
+          <p><strong>Téléphone:</strong> ${data.phone || 'Non renseigné'}</p>
+          <p><strong>Destination:</strong> ${data.destination}</p>
+          <p><strong>Dates souhaitées:</strong> ${data.travel_dates || 'Flexibles'}</p>
+          <p><strong>Durée:</strong> ${data.duration}</p>
+          <p><strong>Nombre de voyageurs:</strong> ${data.travelers}</p>
+          <p><strong>Budget:</strong> ${data.budget || 'Non précisé'}</p>
+          <p><strong>Message:</strong></p>
+          <p>${data.message}</p>
+          ${data.special_requests ? `<p><strong>Demandes spéciales:</strong></p><p>${data.special_requests}</p>` : ''}
+        `
+      })
+    });
+
+    if (!emailResponse.ok) {
+      const errorText = await emailResponse.text();
+      console.error('Erreur Resend:', errorText);
+      return c.json({ success: false, error: 'Erreur lors de l\'envoi de l\'email' }, 500);
+    }
+
+    return c.json({ success: true, message: 'Votre demande a été envoyée avec succès!' });
+
   } catch (error) {
-    return c.json({ success: false, error: 'Erreur lors de l\'envoi' }, 500)
+    console.error('Erreur formulaire contact:', error);
+    return c.json({ success: false, error: 'Une erreur est survenue' }, 500);
   }
-})
+});
 
 // API: Récupérer les paramètres du site
 app.get('/api/settings', async (c) => {
@@ -1090,6 +1758,113 @@ app.get('/api/settings', async (c) => {
     return acc;
   }, {});
   return c.json(settingsMap)
+})
+
+// API: Récupérer les articles récents pour la homepage (max 4)
+app.get('/api/recent-posts', async (c) => {
+  try {
+    // Récupérer les 4 derniers articles publiés depuis la DB
+    const realArticles = await c.env.db.prepare(
+      'SELECT id, title, slug, excerpt, featured_image, created_at FROM blog_posts WHERE published = 1 ORDER BY created_at DESC LIMIT 4'
+    ).all();
+
+    // Articles d'exemple (fallback si pas assez d'articles réels)
+    const exampleArticles = [
+      {
+        id: 'example-1',
+        title: '10 destinations incontournables en 2026',
+        slug: 'example-1',
+        excerpt: 'Découvrez les destinations qui feront rêver les voyageurs cette année. De l\'Europe à l\'Asie, voici mes coups de cœur.',
+        image_url: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&auto=format&fit=crop',
+        created_at: '2026-02-01',
+        isExample: true
+      },
+      {
+        id: 'example-2',
+        title: 'Comment préparer son voyage en 5 étapes',
+        slug: 'example-2',
+        excerpt: 'Les conseils essentiels pour organiser votre voyage sereinement, de la réservation aux derniers préparatifs.',
+        image_url: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&auto=format&fit=crop',
+        created_at: '2026-02-02',
+        isExample: true
+      },
+      {
+        id: 'example-3',
+        title: 'Voyage en famille : mes destinations préférées',
+        slug: 'example-3',
+        excerpt: 'Partir en famille demande une organisation particulière. Voici mes meilleures recommandations pour voyager avec des enfants.',
+        image_url: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800&auto=format&fit=crop',
+        created_at: '2026-02-03',
+        isExample: true
+      },
+      {
+        id: 'example-4',
+        title: 'Voyager en solo : mes meilleurs conseils',
+        slug: 'example-4',
+        excerpt: 'Le voyage en solo est une expérience unique. Découvrez mes astuces pour voyager seul(e) en toute sérénité.',
+        image_url: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&auto=format&fit=crop',
+        created_at: '2026-02-04',
+        isExample: true
+      }
+    ];
+
+    // Combiner articles réels + exemples pour toujours avoir 4 articles
+    const articles = [
+      ...realArticles.results.map((article: any) => ({
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt,
+        image_url: article.featured_image, // Renommer featured_image → image_url pour le frontend
+        created_at: article.created_at,
+        isExample: false
+      })),
+      ...exampleArticles.slice(0, Math.max(0, 4 - realArticles.results.length))
+    ].slice(0, 4);
+
+    return c.json(articles);
+  } catch (error) {
+    console.error('Erreur récupération articles récents:', error);
+    // En cas d'erreur, renvoyer uniquement les articles d'exemple
+    return c.json([
+      {
+        id: 'example-1',
+        title: '10 destinations incontournables en 2026',
+        slug: 'example-1',
+        excerpt: 'Découvrez les destinations qui feront rêver les voyageurs cette année.',
+        image_url: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&auto=format&fit=crop',
+        created_at: '2026-02-01',
+        isExample: true
+      },
+      {
+        id: 'example-2',
+        title: 'Comment préparer son voyage en 5 étapes',
+        slug: 'example-2',
+        excerpt: 'Les conseils essentiels pour organiser votre voyage sereinement.',
+        image_url: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&auto=format&fit=crop',
+        created_at: '2026-02-02',
+        isExample: true
+      },
+      {
+        id: 'example-3',
+        title: 'Voyage en famille : mes destinations préférées',
+        slug: 'example-3',
+        excerpt: 'Partir en famille demande une organisation particulière.',
+        image_url: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800&auto=format&fit=crop',
+        created_at: '2026-02-03',
+        isExample: true
+      },
+      {
+        id: 'example-4',
+        title: 'Voyager en solo : mes meilleurs conseils',
+        slug: 'example-4',
+        excerpt: 'Le voyage en solo est une expérience unique.',
+        image_url: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&auto=format&fit=crop',
+        created_at: '2026-02-04',
+        isExample: true
+      }
+    ]);
+  }
 })
 
 
