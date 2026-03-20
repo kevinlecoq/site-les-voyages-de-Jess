@@ -1050,6 +1050,32 @@ p {
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
+/* Version 3 - Carousel homepage avec nouveaux noms de classes */
+.carousel-image-link-v3 {
+  display: block;
+  flex: 0 0 calc(33.333% - 1.33rem);
+  scroll-snap-align: start;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.carousel-image-link-v3:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.carousel-square-img-v3 {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  object-position: center 30%;
+  display: block;
+}
+
 /* Nouveau style pour carousel homepage - images carrées cliquables - v2.0 FORCE UPDATE */
 .blog-card-link {
   display: block;
@@ -1131,6 +1157,10 @@ p {
     flex: 0 0 calc(50% - 1rem);
   }
   
+  .carousel-image-link-v3 {
+    flex: 0 0 calc(50% - 1rem);
+  }
+  
   .blog-carousel-container {
     padding: 0 2.5rem;
   }
@@ -1142,6 +1172,10 @@ p {
   }
   
   .blog-card-link {
+    flex: 0 0 85%;
+  }
+  
+  .carousel-image-link-v3 {
     flex: 0 0 85%;
   }
   

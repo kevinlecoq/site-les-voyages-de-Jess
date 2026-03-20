@@ -754,14 +754,14 @@ app.get('/', async (c) => {
                   <i class="fas fa-chevron-left"></i>
                 </button>
                 
-                <div class="blog-carousel">
-                  {/* Carousel v2 - Images carrées */}
+                <div class="blog-carousel" id="homepage-carousel-v3">
+                  {/* Carousel v3 - Images carrées */}
                   {blogPosts.results.map((post: any) => (
-                    <a href={`/blog?article=${post.slug}`} class="blog-card-link">
+                    <a href={`/blog?article=${post.slug}`} class="carousel-image-link-v3">
                       <img 
                         src={post.featured_image || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600"}
                         alt={post.title}
-                        class="blog-card-image-square"
+                        class="carousel-square-img-v3"
                       />
                     </a>
                   ))}

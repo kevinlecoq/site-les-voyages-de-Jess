@@ -352,7 +352,7 @@ function scrollBlogCarousel(direction) {
   const carousel = document.querySelector('.blog-carousel');
   if (!carousel) return;
   
-  const firstCard = carousel.querySelector('.blog-card, .blog-card-link');
+  const firstCard = carousel.querySelector('.blog-card, .blog-card-link, .carousel-image-link-v3');
   if (!firstCard) return;
   
   const cardWidth = firstCard.offsetWidth;
