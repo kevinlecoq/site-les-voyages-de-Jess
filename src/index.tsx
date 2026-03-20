@@ -756,25 +756,13 @@ app.get('/', async (c) => {
                 
                 <div class="blog-carousel">
                   {blogPosts.results.map((post: any) => (
-                    <div class="blog-card">
+                    <a href={`/blog?article=${post.slug}`} class="blog-card-link">
                       <img 
                         src={post.featured_image || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600"}
                         alt={post.title}
-                        class="blog-card-image"
+                        class="blog-card-image-square"
                       />
-                      <div class="blog-card-content">
-                        <h3 style={{color: 'var(--color-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>{post.title}</h3>
-                        <p class="blog-card-date" style={{color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginBottom: '1rem'}}>
-                          <i class="far fa-calendar"></i> {new Date(post.published_at).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' })}
-                        </p>
-                        <p style={{lineHeight: 1.6, color: 'var(--color-text-secondary)', marginBottom: '1.5rem'}}>
-                          {post.excerpt}
-                        </p>
-                        <a href={`/blog?article=${post.slug}`} class="btn btn-secondary btn-sm">
-                          <i class="fas fa-book-open"></i> Lire l'article
-                        </a>
-                      </div>
-                    </div>
+                    </a>
                   ))}
                 </div>
 
