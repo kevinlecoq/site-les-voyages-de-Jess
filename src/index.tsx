@@ -744,7 +744,7 @@ app.get('/', async (c) => {
       {/* Section Articles récents */}
       <section class="section">
         <div style={{maxWidth: '1200px', margin: '0 auto'}}>
-          <h2 class="section-title" style={{textAlign: 'center', marginBottom: '3rem'}}>Articles récents</h2>
+          <h2 class="section-title" style={{textAlign: 'center', marginBottom: '3rem'}}>Mes derniers articles</h2>
           
           {blogPosts.results.length > 0 ? (
             <>
