@@ -746,15 +746,48 @@ app.get('/', async (c) => {
         <div style={{maxWidth: '1200px', margin: '0 auto'}}>
           <h2 class="section-title" style={{textAlign: 'center', marginBottom: '3rem'}}>Mes derniers articles</h2>
           
-          <div style={{textAlign: 'center', padding: '3rem', background: 'var(--color-bg-warm)', borderRadius: 'var(--radius-lg)'}}>
-            <h3 style={{color: 'var(--color-primary)', marginBottom: '1rem'}}>🚧 Section en cours de mise à jour</h3>
-            <p style={{color: 'var(--color-text-secondary)', marginBottom: '2rem'}}>
-              Le carousel des articles sera de retour très bientôt !
-            </p>
-            <a href="/blog" class="btn btn-primary">
-              <i class="fas fa-newspaper"></i> Voir tous les articles
-            </a>
-          </div>
+          {blogPosts.results.length > 0 ? (
+            <>
+              {/* Nouveau carousel - Images carrées auto-recadrées */}
+              <div class="homepage-carousel-wrapper">
+                <button class="carousel-nav-btn carousel-nav-prev" onclick="scrollCarouselHome(-1)" aria-label="Article précédent">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                
+                <div class="homepage-carousel-track" id="carousel-homepage">
+                  {blogPosts.results.map((post: any) => (
+                    <a 
+                      href={`/blog?article=${post.slug}`} 
+                      class="carousel-item-link"
+                      aria-label={`Lire l'article : ${post.title}`}
+                    >
+                      <div class="carousel-item-image" style={{backgroundImage: `url(${post.featured_image || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600"})`}}>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+
+                <button class="carousel-nav-btn carousel-nav-next" onclick="scrollCarouselHome(1)" aria-label="Article suivant">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+
+              {/* Bouton vers le blog */}
+              <div style={{textAlign: 'center', marginTop: '3rem'}}>
+                <a href="/blog" class="btn btn-primary" style={{fontSize: '1.1rem', padding: '1rem 2rem'}}>
+                  <i class="fas fa-newspaper"></i> Découvrir tous les articles
+                </a>
+              </div>
+            </>
+          ) : (
+            <div style={{textAlign: 'center', padding: '3rem'}}>
+              <i class="fas fa-book-open" style={{fontSize: '4rem', color: 'var(--color-text-secondary)', marginBottom: '1rem'}}></i>
+              <h3>Bientôt disponible</h3>
+              <p style={{color: 'var(--color-text-secondary)'}}>
+                Les premiers articles arrivent bientôt!
+              </p>
+            </div>
+          )}
         </div>
       </section>
 

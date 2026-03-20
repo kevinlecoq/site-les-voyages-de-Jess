@@ -1050,6 +1050,124 @@ p {
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
+/* ============================================
+   CAROUSEL HOMEPAGE - V4 (Format universel)
+   ============================================ */
+
+.homepage-carousel-wrapper {
+  position: relative;
+  padding: 0 3rem;
+  margin: 0 auto;
+}
+
+.homepage-carousel-track {
+  display: flex;
+  gap: 2rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.homepage-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel-item-link {
+  flex: 0 0 calc(33.333% - 1.33rem);
+  scroll-snap-align: start;
+  text-decoration: none;
+  display: block;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.carousel-item-link:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.carousel-item-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-size: cover;
+  background-position: center 35%;
+  background-repeat: no-repeat;
+  background-color: #f0f0f0;
+}
+
+.carousel-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.carousel-nav-btn:hover {
+  background: var(--color-accent-green);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-nav-prev {
+  left: 0;
+}
+
+.carousel-nav-next {
+  right: 0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .carousel-item-link {
+    flex: 0 0 calc(50% - 1rem);
+  }
+  
+  .homepage-carousel-wrapper {
+    padding: 0 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-item-link {
+    flex: 0 0 85%;
+  }
+  
+  .homepage-carousel-wrapper {
+    padding: 0 2rem;
+  }
+  
+  .carousel-nav-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .carousel-nav-prev {
+    left: -5px;
+  }
+  
+  .carousel-nav-next {
+    right: -5px;
+  }
+}
+
 /* Version 3 - Carousel homepage avec nouveaux noms de classes */
 .carousel-image-link-v3 {
   display: block;

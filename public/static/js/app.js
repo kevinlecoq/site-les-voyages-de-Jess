@@ -343,7 +343,91 @@ style.textContent = `
 document.head.appendChild(style);
 
 // ============================================
-// CAROUSEL BLOG ARTICLES
+// CAROUSEL HOMEPAGE - V4
+// ============================================
+
+let carouselHomeInterval = null;
+
+function scrollCarouselHome(direction) {
+  const carousel = document.querySelector('.homepage-carousel-track');
+  if (!carousel) return;
+  
+  const firstItem = carousel.querySelector('.carousel-item-link');
+  if (!firstItem) return;
+  
+  const itemWidth = firstItem.offsetWidth;
+  const gap = 32; // 2rem = 32px
+  const scrollAmount = (itemWidth + gap) * direction;
+  
+  carousel.scrollBy({
+    left: scrollAmount,
+    behavior: 'smooth'
+  });
+}
+
+// Auto-scroll du carousel homepage (toutes les 3 secondes)
+function startCarouselHomeAutoScroll() {
+  const carousel = document.querySelector('.homepage-carousel-track');
+  if (!carousel) return;
+  
+  // Clear any existing interval
+  if (carouselHomeInterval) {
+    clearInterval(carouselHomeInterval);
+  }
+  
+  carouselHomeInterval = setInterval(() => {
+    const carousel = document.querySelector('.homepage-carousel-track');
+    if (!carousel) return;
+    
+    const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+    const currentScroll = carousel.scrollLeft;
+    
+    // Si on est à la fin, retour au début
+    if (currentScroll >= maxScroll - 10) {
+      carousel.scrollTo({
+        left: 0,
+        behavior: 'smooth'
+      });
+    } else {
+      // Sinon, scroll vers la droite
+      scrollCarouselHome(1);
+    }
+  }, 3000); // 3 secondes
+}
+
+// Pause au hover
+function setupCarouselHomeHoverPause() {
+  const carousel = document.querySelector('.homepage-carousel-track');
+  if (!carousel) return;
+  
+  carousel.addEventListener('mouseenter', () => {
+    if (carouselHomeInterval) {
+      clearInterval(carouselHomeInterval);
+      carouselHomeInterval = null;
+    }
+  });
+  
+  carousel.addEventListener('mouseleave', () => {
+    startCarouselHomeAutoScroll();
+  });
+}
+
+// Initialiser l'auto-scroll au chargement de la page
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    startCarouselHomeAutoScroll();
+    setupCarouselHomeHoverPause();
+  });
+} else {
+  startCarouselHomeAutoScroll();
+  setupCarouselHomeHoverPause();
+}
+
+// Rendre la fonction globale pour l'attribut onclick
+window.scrollCarouselHome = scrollCarouselHome;
+
+// ============================================
+// CAROUSEL BLOG ARTICLES (ancien code conservé)
 // ============================================
 
 let carouselAutoScrollInterval = null;
