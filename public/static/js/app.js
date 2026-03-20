@@ -392,7 +392,7 @@ function startCarouselAutoScroll() {
       // Sinon, scroll vers la droite
       scrollBlogCarousel(1);
     }
-  }, 5000); // 5 secondes
+  }, 3000); // 3 secondes
 }
 
 // Pause au hover
